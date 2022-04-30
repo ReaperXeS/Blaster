@@ -40,6 +40,9 @@ void UOverheadWidget::ShowPlayerName(APawn* aPawn)
 	if (aPawn && aPawn->GetPlayerState()) {
 		SetDisplayText(aPawn->GetPlayerState()->GetPlayerName());
 	}
+	else {
+		SetDisplayText("");
+	}
 }
 
 void UOverheadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
