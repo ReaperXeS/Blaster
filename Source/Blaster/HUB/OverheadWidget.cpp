@@ -37,7 +37,9 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* aPawn)
 
 void UOverheadWidget::ShowPlayerName(APawn* aPawn)
 {
-	SetDisplayText(aPawn->GetPlayerState()->GetPlayerName());
+	if (aPawn && aPawn->GetPlayerState()) {
+		SetDisplayText(aPawn->GetPlayerState()->GetPlayerName());
+	}
 }
 
 void UOverheadWidget::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
