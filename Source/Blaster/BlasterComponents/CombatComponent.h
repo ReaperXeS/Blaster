@@ -22,10 +22,16 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void SetAiming(bool aIsAiming);
+	UFUNCTION(Server, Reliable)
+		void ServerSetAiming(bool aIsAiming);
+
 private:
 	class ABlasterCharacter* Character;
 	UPROPERTY(Replicated)
 		AWeapon* EquippedWeapon;
 
+	UPROPERTY(Replicated)
+		bool bAiming;
 public:
 };
