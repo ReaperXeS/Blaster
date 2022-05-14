@@ -31,6 +31,12 @@ protected:
 
 	void FireButtonPressed(bool aIsPressed);
 
+	UFUNCTION(Server, Reliable)
+		void ServerFire();
+
+	UFUNCTION(NetMulticast, Reliable)
+		void MulticastFire();
+
 private:
 	class ABlasterCharacter* Character;
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
