@@ -27,6 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
+	void Fire();
 
 protected:
 	// Called when the game starts or when spawned
@@ -53,6 +54,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 		class UWidgetComponent* PickupWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+		class UAnimationAsset* FireAnimation;
 public:
 	void SetWeaponState(EWeaponState aState);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
