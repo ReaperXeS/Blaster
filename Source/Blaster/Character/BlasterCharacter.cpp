@@ -284,7 +284,17 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 
 bool ABlasterCharacter::IsWeaponEquipped()
 {
-	return Combat && Combat->EquippedWeapon;
+	const bool bWeaponEquipped = Combat && Combat->EquippedWeapon != nullptr;
+	if (HasAuthority() && IsLocallyControlled()) {
+		if (bWeaponEquipped) {
+			UE_LOG(LogTemp, Warning, TEXT("IsWeaponEquipped = true"));
+		}
+		else {
+			UE_LOG(LogTemp, Warning, TEXT("IsWeaponEquipped = false"));
+		}
+	}
+
+	return bWeaponEquipped;
 }
 
 bool ABlasterCharacter::IsAiming()
