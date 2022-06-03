@@ -6,6 +6,8 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
+#include "Casing.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
 AWeapon::AWeapon()
@@ -115,5 +117,15 @@ void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation) {
 		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+
+	const auto AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName("AmmoEject"));
+	if (AmmoEjectSocket && CasingClass) {
+		const auto SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh());
+
+		const auto World = GetWorld();
+		if (World) {
+			World->SpawnActor<ACasing>(CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
+		}
 	}
 }
