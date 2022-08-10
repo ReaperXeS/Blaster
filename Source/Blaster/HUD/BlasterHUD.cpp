@@ -6,38 +6,44 @@ void ABlasterHUD::DrawHUD()
 {
 	Super::DrawHUD();
 
-	FVector2D ViewportSize;
-	if (GEngine) {
+	if (GEngine)
+	{
+		FVector2D ViewportSize;
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 		const FVector2D ViewportCenter(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
 		const float SpreadScaled = CrosshairSpreadMax * HUDPackage.CrosshairSpread;
-		FVector2D Spread(0.f, 0.f);
+		FVector2D Spread;
 
-		if (HUDPackage.CrosshairsBottom) {
+		if (HUDPackage.CrosshairsBottom)
+		{
 			Spread.X = 0.f;
 			Spread.Y = -SpreadScaled;
 			DrawCrosshair(HUDPackage.CrosshairsBottom, ViewportCenter, Spread);
 		}
 
-		if (HUDPackage.CrosshairsCenter) {
+		if (HUDPackage.CrosshairsCenter)
+		{
 			Spread.X = 0.f;
 			Spread.Y = 0.f;
 			DrawCrosshair(HUDPackage.CrosshairsCenter, ViewportCenter, Spread);
 		}
 
-		if (HUDPackage.CrosshairsLeft) {
+		if (HUDPackage.CrosshairsLeft)
+		{
 			Spread.X = -SpreadScaled;
 			Spread.Y = 0.f;
 			DrawCrosshair(HUDPackage.CrosshairsLeft, ViewportCenter, Spread);
 		}
 
-		if (HUDPackage.CrosshairsRight) {
+		if (HUDPackage.CrosshairsRight)
+		{
 			Spread.X = SpreadScaled;
 			Spread.Y = 0.f;
 			DrawCrosshair(HUDPackage.CrosshairsRight, ViewportCenter, Spread);
 		}
 
-		if (HUDPackage.CrosshairsTop) {
+		if (HUDPackage.CrosshairsTop)
+		{
 			Spread.X = 0.f;
 			Spread.Y = SpreadScaled;
 			DrawCrosshair(HUDPackage.CrosshairsTop, ViewportCenter, Spread);

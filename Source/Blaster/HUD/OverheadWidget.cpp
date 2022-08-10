@@ -4,43 +4,48 @@
 #include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 
-void UOverheadWidget::SetDisplayText(FString aTextToDisplay)
+void UOverheadWidget::SetDisplayText(FString aTextToDisplay) const
 {
-	if (DisplayText) {
+	if (DisplayText)
+	{
 		DisplayText->SetText(FText::FromString(aTextToDisplay));
 	}
 }
 
 void UOverheadWidget::ShowPlayerNetRole(APawn* aPawn)
 {
-	ENetRole RemoteRole = aPawn->GetRemoteRole();
+	const ENetRole RemoteRole = aPawn->GetRemoteRole();
 	FString Role;
 	switch (RemoteRole)
 	{
-	case ENetRole::ROLE_Authority:
+	case ROLE_Authority:
 		Role = FString("Authority");
 		break;
-	case ENetRole::ROLE_AutonomousProxy:
+	case ROLE_AutonomousProxy:
 		Role = FString("AutonomousProxy");
 		break;
-	case ENetRole::ROLE_SimulatedProxy:
+	case ROLE_SimulatedProxy:
 		Role = FString("SimulatedProxy");
 		break;
-	case ENetRole::ROLE_None:
+	case ROLE_None:
 		Role = FString("None");
+		break;
+	default:
 		break;
 	}
 
-	FString RoleString = FString::Printf(TEXT("Remote Role: %s"), *Role);
+	const FString RoleString = FString::Printf(TEXT("Remote Role: %s"), *Role);
 	SetDisplayText(RoleString);
 }
 
 void UOverheadWidget::ShowPlayerName(APawn* aPawn)
 {
-	if (aPawn && aPawn->GetPlayerState()) {
+	if (aPawn && aPawn->GetPlayerState())
+	{
 		SetDisplayText(aPawn->GetPlayerState()->GetPlayerName());
 	}
-	else {
+	else
+	{
 		SetDisplayText("");
 	}
 }

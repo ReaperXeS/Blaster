@@ -7,13 +7,23 @@
 #include "BlasterHUD.generated.h"
 
 USTRUCT(BlueprintType)
-struct FHUDPackage {
+struct FHUDPackage
+{
 	GENERATED_BODY()
 public:
+	UPROPERTY(EditAnywhere)
 	class UTexture2D* CrosshairsCenter = nullptr;
+
+	UPROPERTY(EditAnywhere)
 	UTexture2D* CrosshairsLeft = nullptr;
+
+	UPROPERTY(EditAnywhere)
 	UTexture2D* CrosshairsRight = nullptr;
+
+	UPROPERTY(EditAnywhere)
 	UTexture2D* CrosshairsTop = nullptr;
+
+	UPROPERTY(EditAnywhere)
 	UTexture2D* CrosshairsBottom = nullptr;
 	float CrosshairSpread = 0.f;
 };
@@ -34,7 +44,7 @@ private:
 	void DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread);
 
 	UPROPERTY(EditAnywhere)
-		float CrosshairSpreadMax = 16.f;
+	float CrosshairSpreadMax = 16.f;
 
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
