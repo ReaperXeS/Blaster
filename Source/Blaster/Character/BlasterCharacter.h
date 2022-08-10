@@ -40,25 +40,25 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class USpringArmComponent* CameraBoom;
+	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-		class UCameraComponent* FollowCamera;
+	class UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UWidgetComponent* OverheadWidget;
+	class UWidgetComponent* OverheadWidget;
 
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
-		class AWeapon* OverlappingWeapon;
+	class AWeapon* OverlappingWeapon;
 
 	UFUNCTION()
-		void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	UPROPERTY(VisibleAnywhere)
-		class UCombatComponent* Combat;
+	class UCombatComponent* Combat;
 
 	UFUNCTION(Server, Reliable)
-		void ServerEquipButtonPressed();
+	void ServerEquipButtonPressed();
 
 	float AO_Yaw;
 	float Interp_AO_Yaw;
@@ -69,7 +69,7 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-		class UAnimMontage* FireWeaponMontage;
+	class UAnimMontage* FireWeaponMontage;
 
 public:
 	// Getters and Setters
@@ -80,5 +80,6 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FVector GetHitTarget() const;
 	AWeapon* GetEquippedWeapon();
 };

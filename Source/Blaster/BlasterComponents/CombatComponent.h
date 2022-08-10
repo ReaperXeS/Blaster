@@ -17,7 +17,8 @@ public:
 	UCombatComponent();
 	friend class ABlasterCharacter;
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* aWeaponToEquip);
@@ -26,18 +27,18 @@ protected:
 
 	void SetAiming(bool aIsAiming);
 	UFUNCTION(Server, Reliable)
-		void ServerSetAiming(bool aIsAiming);
+	void ServerSetAiming(bool aIsAiming);
 
 	UFUNCTION()
-		void OnRep_EquippedWeapon();
+	void OnRep_EquippedWeapon();
 
 	void FireButtonPressed(bool aIsPressed);
 
 	UFUNCTION(Server, Reliable)
-		void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
@@ -49,16 +50,16 @@ private:
 	class ABlasterHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
-		AWeapon* EquippedWeapon;
+	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)
-		bool bAiming;
+	bool bAiming;
 
 	UPROPERTY(EditAnywhere)
-		float BaseWalkSpeed;
+	float BaseWalkSpeed;
 
 	UPROPERTY(EditAnywhere)
-		float AimWalkSpeed;
+	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
 
@@ -67,5 +68,6 @@ private:
 	*/
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	FVector HitTarget;
 public:
 };
