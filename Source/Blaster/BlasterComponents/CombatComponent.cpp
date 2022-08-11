@@ -4,13 +4,12 @@
 #include "Blaster/Weapon/Weapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "DrawDebugHelpers.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -35,6 +34,11 @@ void UCombatComponent::BeginPlay()
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+		if (Character->GetFollowCamera())
+		{
+			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
 	}
 }
 
@@ -43,12 +47,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	SetHUDCrosshairs(DeltaTime);
 	if (Character && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
 		HitTarget = HitResult.ImpactPoint;
+
+		SetHUDCrosshairs(DeltaTime);
+		InterpFOV(DeltaTime);
 	}
 }
 
@@ -73,13 +79,12 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 				HUDPackage.CrosshairsLeft = EquippedWeapon->CrosshairsLeft;
 				HUDPackage.CrosshairsRight = EquippedWeapon->CrosshairsRight;
 				HUDPackage.CrosshairsTop = EquippedWeapon->CrosshairsTop;
-				HUDPackage.CrosshairsTop = EquippedWeapon->CrosshairsTop;
 			}
 			// Calculate crosshair spread
 
 			// [0, 600 -> [0,1] Walk speed
-			FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
-			FVector2D VelocityMultiplierRange(0.f, 1.f);
+			const FVector2D WalkSpeedRange(0.f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			const FVector2D VelocityMultiplierRange(0.f, 1.f);
 			FVector Velocity = Character->GetVelocity();
 			Velocity.Z = 0.f;
 
@@ -97,6 +102,28 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 
 			HUD->SetHUDPackage(HUDPackage);
 		}
+	}
+}
+
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr)
+	{
+		return;
+	}
+
+	if (bAiming)
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, EquippedWeapon->ZoomedFOV, DeltaTime, EquippedWeapon->GetZoomInterpSpeed());
+	}
+	else
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomedInterpSpeed);
+	}
+
+	if (Character && Character->GetFollowCamera())
+	{
+		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV);
 	}
 }
 
@@ -119,7 +146,7 @@ void UCombatComponent::ServerSetAiming_Implementation(bool aIsAiming)
 	}
 }
 
-void UCombatComponent::OnRep_EquippedWeapon()
+void UCombatComponent::OnRep_EquippedWeapon() const
 {
 	if (EquippedWeapon && Character)
 	{
@@ -139,7 +166,7 @@ void UCombatComponent::FireButtonPressed(bool aIsPressed)
 	}
 }
 
-void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
+void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult) const
 {
 	FVector2D ViewportSize;
 	if (GEngine && GEngine->GameViewport)
@@ -147,14 +174,14 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 	}
 
-	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
+	const FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
 	if (UGameplayStatics::DeprojectScreenToWorld(UGameplayStatics::GetPlayerController(this, 0), CrosshairLocation,
 	                                             CrosshairWorldPosition, CrosshairWorldDirection))
 	{
-		FVector Start = CrosshairWorldPosition;
-		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
+		const FVector Start = CrosshairWorldPosition;
+		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECC_Visibility);
 
 		if (!TraceHitResult.bBlockingHit)
@@ -187,8 +214,7 @@ void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 
 	EquippedWeapon = aWeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));
-	if (HandSocket)
+	if (const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket")))
 	{
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh());
 	}

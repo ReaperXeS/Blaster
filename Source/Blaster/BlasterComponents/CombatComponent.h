@@ -30,7 +30,7 @@ protected:
 	void ServerSetAiming(bool aIsAiming);
 
 	UFUNCTION()
-	void OnRep_EquippedWeapon();
+	void OnRep_EquippedWeapon() const;
 
 	void FireButtonPressed(bool aIsPressed);
 
@@ -40,7 +40,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult) const;
 
 	void SetHUDCrosshairs(float DeltaTime);
 
@@ -69,5 +69,21 @@ private:
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
 	FVector HitTarget;
+
+	/**
+	 * Aiming and FOV
+	 */
+	// Field of View while not aiming; set to camera's base FOV in BeginPlay
+	float DefaultFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+
+	float CurrentFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
 public:
 };
