@@ -71,7 +71,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 		HUD = HUD == nullptr ? Cast<ABlasterHUD>(Controller->GetHUD()) : HUD;
 		if (HUD)
 		{
-			FHUDPackage HUDPackage;
 			if (EquippedWeapon)
 			{
 				HUDPackage.CrosshairsBottom = EquippedWeapon->CrosshairsBottom;
@@ -178,7 +177,7 @@ void UCombatComponent::FireButtonPressed(bool aIsPressed)
 	}
 }
 
-void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult) const
+void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
 	FVector2D ViewportSize;
 	if (GEngine && GEngine->GameViewport)
@@ -195,6 +194,15 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult) const
 		const FVector Start = CrosshairWorldPosition;
 		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End, ECC_Visibility);
+
+		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>())
+		{
+			HUDPackage.CrosshairsColor = FLinearColor::Red;
+		}
+		else
+		{
+			HUDPackage.CrosshairsColor = FLinearColor::White;
+		}
 
 		if (!TraceHitResult.bBlockingHit)
 		{

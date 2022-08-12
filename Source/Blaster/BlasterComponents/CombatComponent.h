@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -40,7 +41,7 @@ protected:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult) const;
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairs(float DeltaTime);
 
@@ -71,6 +72,7 @@ private:
 	float CrosshairAimFactor;
 	float CrosshairShootingFactor;
 	FVector HitTarget;
+	FHUDPackage HUDPackage;
 
 	/**
 	 * Aiming and FOV
