@@ -93,5 +93,15 @@ private:
 	float ZoomedInterpSpeed = 20.f;
 
 	void InterpFOV(float DeltaTime);
+
+	/**
+	 * Automatic Fire
+	 */
+	FTimerHandle FireTimer;
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void Fire();
+	void FireTimerFinished();
 public:
 };
