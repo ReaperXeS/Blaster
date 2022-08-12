@@ -71,8 +71,12 @@ private:
 	float CrosshairInAirFactor;
 	float CrosshairAimFactor;
 	float CrosshairShootingFactor;
+	float CrosshairEnemyTargetedFactor;
 	FVector HitTarget;
 	FHUDPackage HUDPackage;
+
+	// bool flag to know if the target is an enemy (Implement UInteractWithCrosshairsInterface)
+	bool bTargetIsAnEnemy;
 
 	/**
 	 * Aiming and FOV

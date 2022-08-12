@@ -109,7 +109,9 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 				CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.f, DeltaTime, 40.f);
 			}
 
-			HUDPackage.CrosshairSpread = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
+			CrosshairEnemyTargetedFactor = FMath::FInterpTo(CrosshairEnemyTargetedFactor, bTargetIsAnEnemy ? 0.3f : 0.f, DeltaTime, 40.f);
+
+			HUDPackage.CrosshairSpread = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor - CrosshairEnemyTargetedFactor;
 
 			HUD->SetHUDPackage(HUDPackage);
 		}
@@ -204,10 +206,18 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UInteractWithCrosshairsInterface>())
 		{
 			HUDPackage.CrosshairsColor = FLinearColor::Red;
+			bTargetIsAnEnemy = true;
 		}
 		else
 		{
 			HUDPackage.CrosshairsColor = FLinearColor::White;
+			bTargetIsAnEnemy = false;
+
+			// TODO: Sometimes the crosshairs is not red while aiming the enemy.
+			// if (TraceHitResult.GetActor())
+			// {
+			// 	UE_LOG(LogTemp, Warning, TEXT("Actor %s is not an enemy"), *TraceHitResult.GetActor()->GetName());
+			// }
 		}
 
 		if (!TraceHitResult.bBlockingHit)
