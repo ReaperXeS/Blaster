@@ -12,7 +12,6 @@ class BLASTER_API AProjectile : public AActor
 	GENERATED_BODY()
 
 public:
-
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
 
@@ -23,25 +22,23 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-		virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
+	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 private:
 	UPROPERTY(EditAnywhere)
-		class UBoxComponent* CollisionBox;
+	class UBoxComponent* CollisionBox;
 
 	UPROPERTY(VisibleAnywhere)
-		class UProjectileMovementComponent* ProjectileMovementComponent;
+	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
-		class UParticleSystem* Tracer;
+	class UParticleSystem* Tracer;
 
 	class UParticleSystemComponent* TracerComponent;
 
 	UPROPERTY(EditAnywhere)
-		UParticleSystem* ImpactParticles;
+	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
-		class USoundCue* ImpactSound;
-
+	class USoundCue* ImpactSound;
 public:
 };

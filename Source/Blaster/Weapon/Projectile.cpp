@@ -50,7 +50,7 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 {
 	if (ABlasterCharacter* OtherCharacter = Cast<ABlasterCharacter>(OtherActor))
 	{
-		OtherCharacter->MulticastHit();
+		OtherCharacter->MulticastHit(Hit.Location);
 	}
 
 	Destroy();

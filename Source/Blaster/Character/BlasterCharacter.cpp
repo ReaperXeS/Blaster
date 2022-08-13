@@ -12,6 +12,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BlasterAnimInstance.h"
 #include "Blaster/Blaster.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -370,9 +372,19 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::MulticastHit_Implementation()
+void ABlasterCharacter::MulticastHit_Implementation(FVector_NetQuantize HitLocation)
 {
 	PlayHitReactMontage();
+
+	if (ImpactPlayerParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactPlayerParticles, HitLocation);
+	}
+
+	if (ImpactPlayerSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactPlayerSound, HitLocation);
+	}
 }
 
 void ABlasterCharacter::HideCameraIfCharacterClose() const

@@ -23,7 +23,7 @@ public:
 	void PlayFireMontage(bool aIsAiming) const;
 
 	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
+	void MulticastHit(FVector_NetQuantize HitLocation);
 
 	virtual void OnRep_ReplicatedMovement() override;
 protected:
@@ -81,8 +81,17 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
+	/**
+	 *Hit Reaction
+	 **/
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactPlayerParticles;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactPlayerSound;
 
 	void HideCameraIfCharacterClose() const;
 
