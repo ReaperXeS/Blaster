@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -17,7 +18,8 @@ public:
 	UCombatComponent();
 	friend class ABlasterCharacter;
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+	                           FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* aWeaponToEquip);
@@ -26,35 +28,80 @@ protected:
 
 	void SetAiming(bool aIsAiming);
 	UFUNCTION(Server, Reliable)
-		void ServerSetAiming(bool aIsAiming);
+	void ServerSetAiming(bool aIsAiming);
 
 	UFUNCTION()
-		void OnRep_EquippedWeapon();
+	void OnRep_EquippedWeapon() const;
 
 	void FireButtonPressed(bool aIsPressed);
 
 	UFUNCTION(Server, Reliable)
-		void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
 	UFUNCTION(NetMulticast, Reliable)
-		void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 private:
 	class ABlasterCharacter* Character;
+	class ABlasterPlayerController* Controller;
+	class ABlasterHUD* HUD;
+
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
-		AWeapon* EquippedWeapon;
+	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)
-		bool bAiming;
+	bool bAiming;
 
 	UPROPERTY(EditAnywhere)
-		float BaseWalkSpeed;
+	float BaseWalkSpeed;
 
 	UPROPERTY(EditAnywhere)
-		float AimWalkSpeed;
+	float AimWalkSpeed;
 
 	bool bFireButtonPressed;
+
+	/**
+	* HUD and crosshairs
+	*/
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootingFactor;
+	float CrosshairEnemyTargetedFactor;
+	FVector HitTarget;
+	FHUDPackage HUDPackage;
+
+	// bool flag to know if the target is an enemy (Implement UInteractWithCrosshairsInterface)
+	bool bTargetIsAnEnemy;
+
+	/**
+	 * Aiming and FOV
+	 */
+	// Field of View while not aiming; set to camera's base FOV in BeginPlay
+	float DefaultFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedFOV = 30.f;
+
+	float CurrentFOV;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ZoomedInterpSpeed = 20.f;
+
+	void InterpFOV(float DeltaTime);
+
+	/**
+	 * Automatic Fire
+	 */
+	FTimerHandle FireTimer;
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void Fire();
+	void FireTimerFinished();
 public:
 };
