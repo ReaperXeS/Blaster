@@ -118,6 +118,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+
+	class ABlasterPlayerController* BlasterPlayerController;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
