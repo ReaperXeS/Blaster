@@ -57,6 +57,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, LastHitLocation);
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -84,7 +85,7 @@ void ABlasterCharacter::BeginPlay()
 
 	if (HasAuthority())
 	{
-		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+		OnTakePointDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
 }
 
@@ -164,23 +165,16 @@ void ABlasterCharacter::PlayHitReactMontage() const
 	}
 }
 
-void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser)
+void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser)
 {
 	// Called only on server
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUDHealth();
 	PlayHitReactMontage();
 
-	// TODO: Fix this since refactoring
-	// if (ImpactPlayerParticles)
-	// {
-	// 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactPlayerParticles, HitLocation);
-	// }
-	//
-	// if (ImpactPlayerSound)
-	// {
-	// 	UGameplayStatics::PlaySoundAtLocation(this, ImpactPlayerSound, HitLocation);
-	// }
+	// Will be replicated on client and calls OnRep_HitLocation
+	LastHitLocation = HitLocation;
+	OnRep_LastHitLocation(); // execute client code on server too.	
 }
 
 void ABlasterCharacter::MoveForward(float aValue)
@@ -438,6 +432,19 @@ void ABlasterCharacter::OnRep_Health()
 {
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+}
+
+void ABlasterCharacter::OnRep_LastHitLocation() const
+{
+	if (ImpactPlayerParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactPlayerParticles, LastHitLocation);
+	}
+
+	if (ImpactPlayerSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactPlayerSound, LastHitLocation);
+	}
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

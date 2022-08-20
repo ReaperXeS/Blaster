@@ -13,7 +13,8 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	{
 		if (const auto OwnerController = OwnerCharacter->Controller)
 		{
-			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController, this, UDamageType::StaticClass());
+			const auto HitDirection = (Hit.Location - GetActorLocation()).GetSafeNormal();
+			UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitDirection, Hit, OwnerController, this, UDamageType::StaticClass());
 		}
 	}
 

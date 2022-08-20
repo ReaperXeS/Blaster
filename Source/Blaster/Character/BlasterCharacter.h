@@ -45,7 +45,8 @@ protected:
 
 	void PlayHitReactMontage() const;
 	UFUNCTION()
-	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	void ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
+
 	void UpdateHUDHealth();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -119,6 +120,13 @@ private:
 	void OnRep_Health();
 
 	class ABlasterPlayerController* BlasterPlayerController;
+
+	// Last Hit Location on the Character
+	UPROPERTY(ReplicatedUsing=OnRep_LastHitLocation, VisibleAnywhere, Category = "Player Stats")
+	FVector_NetQuantize LastHitLocation = FVector(0);
+
+	UFUNCTION()
+	void OnRep_LastHitLocation() const;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
