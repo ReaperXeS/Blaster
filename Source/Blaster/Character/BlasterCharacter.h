@@ -25,8 +25,10 @@ public:
 
 	virtual void OnRep_ReplicatedMovement() override;
 
+	void EliminationServer();
+
 	UFUNCTION(NetMulticast, Reliable)
-	void Eliminated();
+	void MulticastElimination();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -136,6 +138,12 @@ private:
 	void OnRep_LastHitLocation() const;
 
 	bool bEliminated = false;
+
+	FTimerHandle EliminationTimer;
+	UPROPERTY(EditDefaultsOnly, Category = "Player Stats")
+	float EliminationDelay = 3.f;
+
+	void EliminationTimerFinished();
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);

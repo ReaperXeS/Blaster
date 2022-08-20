@@ -23,6 +23,7 @@ ABlasterCharacter::ABlasterCharacter()
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetMesh());
 	CameraBoom->TargetArmLength = 600.f;
@@ -69,7 +70,13 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void ABlasterCharacter::Eliminated_Implementation()
+void ABlasterCharacter::EliminationServer()
+{
+	MulticastElimination();
+	GetWorldTimerManager().SetTimer(EliminationTimer, this, &ABlasterCharacter::EliminationTimerFinished, EliminationDelay);
+}
+
+void ABlasterCharacter::MulticastElimination_Implementation()
 {
 	bEliminated = true;
 	PlayElimMontage();
@@ -469,6 +476,15 @@ void ABlasterCharacter::OnRep_LastHitLocation() const
 	if (ImpactPlayerSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactPlayerSound, LastHitLocation);
+	}
+}
+
+void ABlasterCharacter::EliminationTimerFinished()
+{
+	// Called only on server
+	if (const auto BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+	{
+		BlasterGameMode->RequestRespawn(this, Controller);
 	}
 }
 
