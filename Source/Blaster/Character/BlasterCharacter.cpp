@@ -12,6 +12,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BlasterAnimInstance.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
@@ -66,6 +67,12 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0.f;
+}
+
+void ABlasterCharacter::Eliminated_Implementation()
+{
+	bEliminated = true;
+	PlayElimMontage();
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -150,6 +157,15 @@ void ABlasterCharacter::PlayFireMontage(bool aIsAiming) const
 	}
 }
 
+void ABlasterCharacter::PlayElimMontage() const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (ElimMontage && AnimInstance)
+	{
+		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
 void ABlasterCharacter::PlayHitReactMontage() const
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr || HitReactMontage == nullptr)
@@ -174,7 +190,16 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, class 
 
 	// Will be replicated on client and calls OnRep_HitLocation
 	LastHitLocation = HitLocation;
-	OnRep_LastHitLocation(); // execute client code on server too.	
+	OnRep_LastHitLocation(); // execute client code on server too.
+
+	if (Health == 0.f)
+	{
+		if (ABlasterGameMode* BlasterGameMode = GetWorld()->GetAuthGameMode<ABlasterGameMode>())
+		{
+			const auto AttackerController = Cast<ABlasterPlayerController>(InstigatedBy);
+			BlasterGameMode->PlayerEliminated(this, BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController, AttackerController);
+		}
+	}
 }
 
 void ABlasterCharacter::MoveForward(float aValue)
