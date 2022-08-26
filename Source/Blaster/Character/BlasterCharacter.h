@@ -57,6 +57,9 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
 
 	void UpdateHUDHealth();
+
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -182,6 +185,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Elim")
 	class USoundCue* EliminationBotSound;
+
+	class ABlasterPlayerState* BlasterPlayerState;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
