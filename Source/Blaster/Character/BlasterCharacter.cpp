@@ -140,6 +140,7 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if (BlasterPlayerState)
 		{
+			BlasterPlayerState->AddToDefeats(0); // Init Defeats
 			BlasterPlayerState->AddToScore(0.f); // Init Score
 		}
 	}
