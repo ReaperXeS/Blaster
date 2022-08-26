@@ -22,6 +22,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool aIsAiming) const;
+	// ReSharper disable once IdentifierTypo
 	void PlayElimMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
@@ -100,6 +101,7 @@ private:
 	UAnimMontage* HitReactMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
+	// ReSharper disable once IdentifierTypo
 	UAnimMontage* ElimMontage;
 
 	UPROPERTY(EditAnywhere)
@@ -134,6 +136,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	// Last Hit Location on the Character
@@ -186,6 +189,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Elim")
 	class USoundCue* EliminationBotSound;
 
+	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 public:
 	// Getters and Setters
