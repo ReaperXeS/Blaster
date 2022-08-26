@@ -29,6 +29,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
+	void Drop();
 
 	/*
 	* Textures for the weapon crosshairs
@@ -74,6 +75,7 @@ protected:
 
 	UFUNCTION()
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void SetEnablePhysics(bool Enabled) const;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")

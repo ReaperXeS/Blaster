@@ -74,6 +74,10 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 
 void ABlasterCharacter::EliminationServer()
 {
+	if (Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Drop();
+	}
 	MulticastElimination();
 	GetWorldTimerManager().SetTimer(EliminationTimer, this, &ABlasterCharacter::EliminationTimerFinished, EliminationDelay);
 }
@@ -82,6 +86,8 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 {
 	bEliminated = true;
 	PlayElimMontage();
+
+	// Start dissolve effect
 	if (DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
@@ -90,6 +96,18 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
 	}
 	StartDissolve();
+
+	// Disable character movement
+	GetCharacterMovement()->DisableMovement(); // w-a-s-d
+	GetCharacterMovement()->StopMovementImmediately(); // disable rotation
+	if (BlasterPlayerController)
+	{
+		DisableInput(BlasterPlayerController); // can't continue to fire weapon, jump etc.
+	}
+
+	// Disable collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
