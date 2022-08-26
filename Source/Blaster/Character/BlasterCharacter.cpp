@@ -15,6 +15,7 @@
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 
 // Sets default values
@@ -108,6 +109,18 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Spawn Elimination Bot
+	if (EliminationBotEffect)
+	{
+		const FVector EliminationBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 200.f);
+		EliminationBotComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EliminationBotEffect, EliminationBotSpawnPoint, GetActorRotation());
+
+		if (EliminationBotSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EliminationBotSound, EliminationBotSpawnPoint, GetActorRotation());
+		}
+	}
 }
 
 void ABlasterCharacter::UpdateHUDHealth()
@@ -116,6 +129,16 @@ void ABlasterCharacter::UpdateHUDHealth()
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void ABlasterCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if (EliminationBotComponent)
+	{
+		EliminationBotComponent->DestroyComponent();
 	}
 }
 
@@ -516,6 +539,7 @@ void ABlasterCharacter::EliminationTimerFinished()
 	}
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
 {
 	if (DynamicDissolveMaterialInstance)

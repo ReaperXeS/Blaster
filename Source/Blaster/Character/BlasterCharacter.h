@@ -30,6 +30,8 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElimination();
+
+	virtual void Destroyed() override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -169,6 +171,17 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Elim")
 	UMaterialInstance* DissolveMaterialInstance;
 
+	/**
+	 * Elimination bot
+	 **/
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UParticleSystem* EliminationBotEffect;
+
+	UPROPERTY(VisibleAnywhere, Category = "Elim")
+	UParticleSystemComponent* EliminationBotComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	class USoundCue* EliminationBotSound;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);

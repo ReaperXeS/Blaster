@@ -3,7 +3,6 @@
 #include "Projectile.h"
 
 #include "Blaster/Blaster.h"
-#include "Blaster/Character/BlasterCharacter.h"
 #include "Components/BoxComponent.h"
 #include "GameFrameWork/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
