@@ -147,7 +147,6 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UpdateHUDHealth();
-
 	if (HasAuthority())
 	{
 		OnTakePointDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -591,20 +590,7 @@ void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon) const
 
 bool ABlasterCharacter::IsWeaponEquipped() const
 {
-	const bool bWeaponEquipped = Combat && Combat->EquippedWeapon != nullptr;
-	if (HasAuthority() && IsLocallyControlled())
-	{
-		if (bWeaponEquipped)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("IsWeaponEquipped = true"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("IsWeaponEquipped = false"));
-		}
-	}
-
-	return bWeaponEquipped;
+	return Combat && Combat->EquippedWeapon != nullptr;
 }
 
 bool ABlasterCharacter::IsAiming() const
