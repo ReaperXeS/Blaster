@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
+#include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
@@ -21,11 +22,17 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool aIsAiming) const;
-
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit(FVector_NetQuantize HitLocation);
+	// ReSharper disable once IdentifierTypo
+	void PlayElimMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
+
+	void EliminationServer();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElimination();
+
+	virtual void Destroyed() override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -47,7 +54,13 @@ protected:
 	void FireButtonReleased();
 
 	void PlayHitReactMontage() const;
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
 
+	void UpdateHUD();
+
+	// Poll for any relevant classes and initialize our HUD
+	void PollInit();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
@@ -87,6 +100,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	// ReSharper disable once IdentifierTypo
+	UAnimMontage* ElimMontage;
+
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactPlayerParticles;
 
@@ -106,6 +123,74 @@ private:
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
 
+	/**
+	 * Player Health
+	 */
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.f;
+
+	// Current Health of the Character
+	UPROPERTY(ReplicatedUsing=OnRep_Health, VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.f;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
+
+	// Last Hit Location on the Character
+	UPROPERTY(ReplicatedUsing=OnRep_LastHitLocation, VisibleAnywhere, Category = "Player Stats")
+	FVector_NetQuantize LastHitLocation = FVector(0);
+
+	UFUNCTION()
+	void OnRep_LastHitLocation() const;
+
+	bool bEliminated = false;
+
+	FTimerHandle EliminationTimer;
+	UPROPERTY(EditDefaultsOnly, Category = "Player Stats")
+	float EliminationDelay = 3.f;
+
+	void EliminationTimerFinished();
+
+	/**
+	 * Dissolved Effect
+	 **/
+	UPROPERTY(VisibleAnywhere, Category = "Elim")
+	UTimelineComponent* DissolveTimeline;
+
+	FOnTimelineFloat DissolveTrack;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UCurveFloat* DissolveCurve;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
+
+	// Dynamic Instance that we can change at runtime
+	UPROPERTY(VisibleAnywhere, Category = "Elim")
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	// Material instance set on the Blueprint, used with the dynamic material instance
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* DissolveMaterialInstance;
+
+	/**
+	 * Elimination bot
+	 **/
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UParticleSystem* EliminationBotEffect;
+
+	UPROPERTY(VisibleAnywhere, Category = "Elim")
+	UParticleSystemComponent* EliminationBotComponent;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	class USoundCue* EliminationBotSound;
+
+	UPROPERTY()
+	class ABlasterPlayerState* BlasterPlayerState;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -119,4 +204,8 @@ public:
 	AWeapon* GetEquippedWeapon() const;
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsEliminated() const { return bEliminated; }
+
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 };
