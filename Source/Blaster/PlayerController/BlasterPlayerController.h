@@ -14,6 +14,8 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 public:
+	void HideDeathMessage();
+	void UpdateDeathMessage(FString KilledBy);
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);

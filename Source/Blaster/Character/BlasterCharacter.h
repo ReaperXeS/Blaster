@@ -57,7 +57,7 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
 
-	void UpdateHUDHealth();
+	void UpdateHUD();
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();

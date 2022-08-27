@@ -124,12 +124,13 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 	}
 }
 
-void ABlasterCharacter::UpdateHUDHealth()
+void ABlasterCharacter::UpdateHUD()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+		BlasterPlayerController->HideDeathMessage();
 	}
 }
 
@@ -160,7 +161,7 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UpdateHUDHealth();
+	UpdateHUD();
 	if (HasAuthority())
 	{
 		OnTakePointDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
@@ -257,7 +258,7 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, class 
 {
 	// Called only on server
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-	UpdateHUDHealth();
+	UpdateHUD();
 	PlayHitReactMontage();
 
 	// Will be replicated on client and calls OnRep_HitLocation
@@ -527,7 +528,7 @@ void ABlasterCharacter::HideCameraIfCharacterClose() const
 
 void ABlasterCharacter::OnRep_Health()
 {
-	UpdateHUDHealth();
+	UpdateHUD();
 	PlayHitReactMontage();
 }
 

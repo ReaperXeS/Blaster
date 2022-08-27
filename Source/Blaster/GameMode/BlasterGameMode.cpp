@@ -21,6 +21,11 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, 
 	if (EliminatedPlayerState)
 	{
 		EliminatedPlayerState->AddToDefeats(1);
+
+		if (AttackerPlayerState)
+		{
+			EliminatedPlayerState->UpdateDeathMessage(AttackerPlayerState->GetPlayerName());
+		}
 	}
 
 	if (EliminatedCharacter)

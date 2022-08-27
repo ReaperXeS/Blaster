@@ -13,11 +13,18 @@ void ABlasterPlayerState::AddToScore(float ScoreAmountToAdd)
 	UpdateScore();
 }
 
+void ABlasterPlayerState::UpdateDeathMessage(FString KillerName)
+{
+	KilledBy = KillerName;
+	UpdateDeathMessageHUD();
+}
+
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
+	DOREPLIFETIME(ABlasterPlayerState, KilledBy);
 }
 
 void ABlasterPlayerState::UpdateDefeats()
@@ -29,6 +36,19 @@ void ABlasterPlayerState::UpdateDefeats()
 		if (Controller)
 		{
 			Controller->SetHUDDefeats(Defeats);
+		}
+	}
+}
+
+void ABlasterPlayerState::UpdateDeathMessageHUD()
+{
+	Character = Character == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : Character;
+	if (Character)
+	{
+		Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+		if (Controller)
+		{
+			Controller->UpdateDeathMessage(KilledBy);
 		}
 	}
 }
@@ -56,6 +76,11 @@ void ABlasterPlayerState::OnRep_Score()
 void ABlasterPlayerState::OnRep_Defeats()
 {
 	UpdateDefeats();
+}
+
+void ABlasterPlayerState::OnRep_KilledBy()
+{
+	UpdateDeathMessageHUD();
 }
 
 void ABlasterPlayerState::AddToDefeats(int32 DefeatsAmount)

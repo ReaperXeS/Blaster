@@ -8,7 +8,21 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
-void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
+void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->DeathMessage &&
+		BlasterHUD->CharacterOverlay->KilledBy)
+	{
+		BlasterHUD->CharacterOverlay->KilledBy->SetText(FText::FromString(KilledBy));
+		BlasterHUD->CharacterOverlay->KilledBy->SetVisibility(ESlateVisibility::Visible);
+		BlasterHUD->CharacterOverlay->DeathMessage->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD &&
@@ -20,7 +34,7 @@ void ABlasterPlayerController::SetHUDDefeats(int32 Defeats)
 	}
 }
 
-void ABlasterPlayerController::SetHUDHealth(float Health, float MaxHealth)
+void ABlasterPlayerController::SetHUDHealth(const float Health, const float MaxHealth)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	if (BlasterHUD &&
@@ -59,6 +73,19 @@ void ABlasterPlayerController::BeginPlay()
 	}
 }
 
+void ABlasterPlayerController::HideDeathMessage()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if (BlasterHUD &&
+		BlasterHUD->CharacterOverlay &&
+		BlasterHUD->CharacterOverlay->DeathMessage &&
+		BlasterHUD->CharacterOverlay->KilledBy)
+	{
+		BlasterHUD->CharacterOverlay->KilledBy->SetVisibility(ESlateVisibility::Collapsed);
+		BlasterHUD->CharacterOverlay->DeathMessage->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -67,4 +94,5 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 	}
+	HideDeathMessage();
 }
