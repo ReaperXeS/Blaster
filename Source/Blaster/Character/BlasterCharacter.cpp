@@ -86,6 +86,10 @@ void ABlasterCharacter::EliminationServer()
 
 void ABlasterCharacter::MulticastElimination_Implementation()
 {
+	if (BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDWeaponAmmo(0);
+	}
 	bEliminated = true;
 	PlayElimMontage();
 

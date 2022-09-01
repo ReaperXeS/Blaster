@@ -27,9 +27,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	void ShowPickupWidget(bool bShowWidget);
+	void ShowPickupWidget(bool bShowWidget) const;
 	virtual void Fire(const FVector& HitTarget);
 	void Drop();
+
+
+	virtual void SetOwner(AActor* NewOwner) override;
+	void SetHUDAmmo() const;
 
 	/*
 	* Textures for the weapon crosshairs
@@ -98,6 +102,23 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ACasing> CasingClass;
+
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo = 30;
+
+	void SpendRound();
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity = 30;
+
+	UPROPERTY()
+	class ABlasterCharacter* BlasterOwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterOwnerController;
 public:
 	void SetWeaponState(EWeaponState aState);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }

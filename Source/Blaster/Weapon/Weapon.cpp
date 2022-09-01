@@ -7,6 +7,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
 #include "Casing.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Engine/SkeletalMeshSocket.h"
 
 // Sets default values
@@ -61,12 +62,12 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if (BlasterCharacter)
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
 	{
 		BlasterCharacter->SetOverlappingWeapon(this);
 	}
@@ -74,8 +75,7 @@ void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* 
 
 void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
-	if (BlasterCharacter)
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor))
 	{
 		BlasterCharacter->SetOverlappingWeapon(nullptr);
 	}
@@ -86,6 +86,18 @@ void AWeapon::SetEnablePhysics(const bool Enabled) const
 	WeaponMesh->SetSimulatePhysics(Enabled);
 	WeaponMesh->SetEnableGravity(Enabled);
 	WeaponMesh->SetCollisionEnabled(Enabled ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+}
+
+void AWeapon::SpendRound()
+{
+	--Ammo;
+	SetHUDAmmo();
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
 }
 
 // Server
@@ -114,6 +126,7 @@ void AWeapon::SetWeaponState(EWeaponState aState)
 }
 
 // Client Only
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AWeapon::OnRep_WeaponState()
 {
 	switch (WeaponState)
@@ -131,7 +144,7 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
-void AWeapon::ShowPickupWidget(bool bShowWidget)
+void AWeapon::ShowPickupWidget(bool bShowWidget) const
 {
 	if (PickupWidget)
 	{
@@ -156,6 +169,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			World->SpawnActor<ACasing>(CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
 		}
 	}
+	SpendRound();
 }
 
 void AWeapon::Drop()
@@ -164,4 +178,28 @@ void AWeapon::Drop()
 	const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	GetWeaponMesh()->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
+}
+
+void AWeapon::SetOwner(AActor* NewOwner)
+{
+	Super::SetOwner(NewOwner);
+
+	BlasterOwnerCharacter = Cast<ABlasterCharacter>(NewOwner);
+	if (BlasterOwnerCharacter)
+	{
+		BlasterOwnerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+		SetHUDAmmo();
+	}
+	else
+	{
+		BlasterOwnerController = nullptr;
+	}
+}
+
+void AWeapon::SetHUDAmmo() const
+{
+	if (BlasterOwnerController)
+	{
+		BlasterOwnerController->SetHUDWeaponAmmo(Ammo);
+	}
 }

@@ -50,6 +50,11 @@ void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 		return;
 	}
 
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->Drop();
+	}
+
 	EquippedWeapon = aWeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	if (const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket")))
