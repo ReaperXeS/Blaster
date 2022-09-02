@@ -26,6 +26,7 @@ public:
 
 	void EquipWeapon(class AWeapon* aWeaponToEquip);
 	void Reload();
+	void UpdateAmmoValues();
 protected:
 	virtual void BeginPlay() override;
 
@@ -52,7 +53,9 @@ protected:
 	void ServerReload();
 
 	// Executed on Server and Client
-	void HandleReload();
+	void HandleReload() const;
+
+	int32 AmountToReload() const;
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character;

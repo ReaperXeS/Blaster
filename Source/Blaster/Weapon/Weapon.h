@@ -31,6 +31,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget) const;
 	virtual void Fire(const FVector& HitTarget);
 	void Drop();
+	void AddAmmo(int32 AmmoToAdd);
 
 
 	virtual void SetOwner(AActor* NewOwner) override;
@@ -133,4 +134,6 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	bool IsEmpty() const;
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };

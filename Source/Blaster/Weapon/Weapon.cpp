@@ -185,6 +185,12 @@ void AWeapon::Drop()
 	SetOwner(nullptr);
 }
 
+void AWeapon::AddAmmo(const int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+}
+
 void AWeapon::SetOwner(AActor* NewOwner)
 {
 	Super::SetOwner(NewOwner);
