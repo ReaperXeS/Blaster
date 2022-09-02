@@ -90,7 +90,7 @@ void AWeapon::SetEnablePhysics(const bool Enabled) const
 
 void AWeapon::SpendRound()
 {
-	--Ammo;
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
 	SetHUDAmmo();
 }
 
@@ -123,6 +123,11 @@ void AWeapon::SetWeaponState(EWeaponState aState)
 	default:
 		break;
 	}
+}
+
+bool AWeapon::IsEmpty() const
+{
+	return Ammo <= 0;
 }
 
 // Client Only

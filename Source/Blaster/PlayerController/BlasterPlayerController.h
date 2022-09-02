@@ -17,6 +17,7 @@ public:
 	void HideDeathMessage();
 	void UpdateDeathMessage(FString KilledBy);
 	void SetHUDWeaponAmmo(int32 Ammo);
+	void SetHUDCarriedAmmo(int32 Ammo);
 
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDHealth(float Health, float MaxHealth);

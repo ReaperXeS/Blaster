@@ -29,6 +29,14 @@ void ABlasterPlayerController::SetHUDWeaponAmmo(const int32 Ammo)
 	}
 }
 
+void ABlasterPlayerController::SetHUDCarriedAmmo(const int32 Ammo)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBockText(GetBlasterHUD()->CharacterOverlay->CarriedAmmoAmount, Ammo);
+	}
+}
+
 void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
