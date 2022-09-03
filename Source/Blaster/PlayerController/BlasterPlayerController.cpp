@@ -5,84 +5,122 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
 {
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD &&
-		BlasterHUD->CharacterOverlay &&
-		BlasterHUD->CharacterOverlay->DeathMessage &&
-		BlasterHUD->CharacterOverlay->KilledBy)
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay &&
+		GetBlasterHUD()->CharacterOverlay->DeathMessage &&
+		GetBlasterHUD()->CharacterOverlay->KilledBy)
 	{
-		BlasterHUD->CharacterOverlay->KilledBy->SetText(FText::FromString(KilledBy));
-		BlasterHUD->CharacterOverlay->KilledBy->SetVisibility(ESlateVisibility::Visible);
-		BlasterHUD->CharacterOverlay->DeathMessage->SetVisibility(ESlateVisibility::Visible);
+		GetBlasterHUD()->CharacterOverlay->KilledBy->SetText(FText::FromString(KilledBy));
+		GetBlasterHUD()->CharacterOverlay->KilledBy->SetVisibility(ESlateVisibility::Visible);
+		GetBlasterHUD()->CharacterOverlay->DeathMessage->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void ABlasterPlayerController::SetHUDWeaponAmmo(const int32 Ammo)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->WeaponAmmoAmount, Ammo);
+	}
+}
+
+void ABlasterPlayerController::SetHUDCarriedAmmo(const int32 Ammo)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->CarriedAmmoAmount, Ammo);
+	}
+}
+
+void ABlasterPlayerController::SetHUDCarriedWeaponType(const EWeaponType WeaponType)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		FString WeaponTypeString;
+		switch (WeaponType)
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			WeaponTypeString = "Assault Rifle";
+			break;
+		default:
+			WeaponTypeString = "Patate";
+			break;
+		}
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->CarriedAmmoWeaponType, WeaponTypeString);
 	}
 }
 
 void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD &&
-		BlasterHUD->CharacterOverlay &&
-		BlasterHUD->CharacterOverlay->DefeatsAmount)
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
 	{
-		const FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
-		BlasterHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->DefeatsAmount, Defeats);
 	}
 }
 
 void ABlasterPlayerController::SetHUDHealth(const float Health, const float MaxHealth)
 {
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD &&
-		BlasterHUD->CharacterOverlay &&
-		BlasterHUD->CharacterOverlay->HealthBar &&
-		BlasterHUD->CharacterOverlay->HealthText)
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay &&
+		GetBlasterHUD()->CharacterOverlay->HealthBar &&
+		GetBlasterHUD()->CharacterOverlay->HealthText)
 	{
 		const float HealthPercent = Health / MaxHealth;
-		BlasterHUD->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
+		GetBlasterHUD()->CharacterOverlay->HealthBar->SetPercent(HealthPercent);
 
 		const FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
-		BlasterHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
+		GetBlasterHUD()->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
 }
 
-void ABlasterPlayerController::SetHUDScore(float Score)
+void ABlasterPlayerController::SetHUDScore(const float Score)
 {
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD &&
-		BlasterHUD->CharacterOverlay &&
-		BlasterHUD->CharacterOverlay->ScoreAmount)
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
 	{
-		const FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
-		BlasterHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->ScoreAmount, FMath::FloorToInt(Score));
 	}
 }
 
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
-	if (BlasterHUD)
+ABlasterHUD* ABlasterPlayerController::GetBlasterHUD()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	return BlasterHUD;
+}
+
+void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const int32 Value) const
+{
+	const auto TextString = FString::Printf(TEXT("%d"), Value);
+	UpdateTextBlockText(TextBlock, TextString);
+}
+
+void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const FString Text) const
+{
+	if (TextBlock)
 	{
-		BlasterHUD->CharacterOverlay;
+		TextBlock->SetText(FText::FromString(Text));
 	}
 }
 
 void ABlasterPlayerController::HideDeathMessage()
 {
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD &&
-		BlasterHUD->CharacterOverlay &&
-		BlasterHUD->CharacterOverlay->DeathMessage &&
-		BlasterHUD->CharacterOverlay->KilledBy)
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay &&
+		GetBlasterHUD()->CharacterOverlay->DeathMessage &&
+		GetBlasterHUD()->CharacterOverlay->KilledBy)
 	{
-		BlasterHUD->CharacterOverlay->KilledBy->SetVisibility(ESlateVisibility::Collapsed);
-		BlasterHUD->CharacterOverlay->DeathMessage->SetVisibility(ESlateVisibility::Collapsed);
+		GetBlasterHUD()->CharacterOverlay->KilledBy->SetVisibility(ESlateVisibility::Collapsed);
+		GetBlasterHUD()->CharacterOverlay->DeathMessage->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
 
