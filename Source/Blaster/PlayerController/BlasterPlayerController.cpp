@@ -56,6 +56,17 @@ void ABlasterPlayerController::SetHUDCarriedWeaponType(const EWeaponType WeaponT
 	}
 }
 
+void ABlasterPlayerController::SetHUDMatchCountdown(const float CountdownTime)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		const int32 Minutes = FMath::FloorToInt(CountdownTime / 60);
+		const int32 Seconds = CountdownTime - Minutes * 60;
+		const FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->MatchCountdownText, CountdownText);
+	}
+}
+
 void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
@@ -112,6 +123,16 @@ void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const 
 	}
 }
 
+void ABlasterPlayerController::SetHUDTime()
+{
+	const uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	if (CountDownInt != SecondsLeft)
+	{
+		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+	}
+	CountDownInt = SecondsLeft;
+}
+
 void ABlasterPlayerController::HideDeathMessage()
 {
 	if (GetBlasterHUD() &&
@@ -133,4 +154,11 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 	}
 	HideDeathMessage();
+}
+
+void ABlasterPlayerController::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	SetHUDTime();
 }

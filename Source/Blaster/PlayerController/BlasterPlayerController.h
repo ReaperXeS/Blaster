@@ -20,19 +20,26 @@ public:
 	void SetHUDWeaponAmmo(int32 Ammo);
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDCarriedWeaponType(EWeaponType WeaponType);
+	void SetHUDMatchCountdown(const float CountdownTime);
 
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
+	virtual void Tick(float DeltaSeconds) override;
 protected:
 	virtual void BeginPlay() override;
 	class ABlasterHUD* GetBlasterHUD();
 
 	void UpdateTextBlockText(class UTextBlock* TextBlock, int32 Value) const;
 	void UpdateTextBlockText(UTextBlock* TextBlock, FString Text) const;
+
+	void SetHUDTime();
 public:
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
+
+	float MatchTime = 120.f;
+	uint32 CountDownInt = 0;
 };
