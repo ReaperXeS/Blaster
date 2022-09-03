@@ -33,6 +33,9 @@ public:
 
 	// Synced with server clock as soon as possible
 	virtual void ReceivedPlayer() override;
+	void OnMatchStateSet(FName State);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 	virtual void BeginPlay() override;
 	class ABlasterHUD* GetBlasterHUD();
@@ -68,4 +71,10 @@ private:
 
 	float MatchTime = 120.f;
 	uint32 CountDownInt = 0;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState;
+
+	UFUNCTION()
+	void OnRep_MatchState();
 };

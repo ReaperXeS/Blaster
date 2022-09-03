@@ -8,6 +8,8 @@
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Net/UnrealNetwork.h"
+#include "Blaster/GameMode/BlasterGameMode.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
 {
@@ -103,6 +105,13 @@ void ABlasterPlayerController::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+}
+
 ABlasterHUD* ABlasterPlayerController::GetBlasterHUD()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -131,6 +140,14 @@ void ABlasterPlayerController::SetHUDTime()
 		SetHUDMatchCountdown(MatchTime - GetServerTime());
 	}
 	CountDownInt = SecondsLeft;
+}
+
+void ABlasterPlayerController::OnRep_MatchState()
+{
+	if (MatchState == MatchState::InProgress && GetBlasterHUD())
+	{
+		GetBlasterHUD()->AddCharacterOverlay();
+	}
 }
 
 void ABlasterPlayerController::ClientReportServerTime_Implementation(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest)
@@ -182,7 +199,7 @@ void ABlasterPlayerController::CheckTimeSync(const float DeltaSeconds)
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
 	CheckTimeSync(DeltaSeconds);
 	SetHUDTime();
 }
@@ -203,5 +220,15 @@ void ABlasterPlayerController::ReceivedPlayer()
 	if (IsLocalController())
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+	}
+}
+
+void ABlasterPlayerController::OnMatchStateSet(const FName State)
+{
+	MatchState = State;
+
+	if (MatchState == MatchState::InProgress && GetBlasterHUD())
+	{
+		GetBlasterHUD()->AddCharacterOverlay();
 	}
 }

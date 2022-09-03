@@ -44,9 +44,10 @@ public:
 
 	UPROPERTY()
 	class UCharacterOverlay* CharacterOverlay;
+
+	void AddCharacterOverlay() const;
 protected:
 	virtual void BeginPlay() override;
-	void AddCharacterOverlay();
 private:
 	FHUDPackage HUDPackage;
 
