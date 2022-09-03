@@ -125,12 +125,25 @@ void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const 
 
 void ABlasterPlayerController::SetHUDTime()
 {
-	const uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	const uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
 	if (CountDownInt != SecondsLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+		SetHUDMatchCountdown(MatchTime - GetServerTime());
 	}
 	CountDownInt = SecondsLeft;
+}
+
+void ABlasterPlayerController::ClientReportServerTime_Implementation(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest)
+{
+	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	const float CurrentServerTime = TimeServerReceivedClientRequest + (RoundTripTime * 0.5f);
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
+}
+
+void ABlasterPlayerController::ServerRequestServerTime_Implementation(const float TimeOfClientRequest)
+{
+	const float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
 }
 
 void ABlasterPlayerController::HideDeathMessage()
@@ -156,9 +169,39 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	HideDeathMessage();
 }
 
+void ABlasterPlayerController::CheckTimeSync(const float DeltaSeconds)
+{
+	TimeSyncRunningTime += DeltaSeconds;
+	if (IsLocalController() && TimeSyncRunningTime > TimeSyncFrequency)
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+		TimeSyncRunningTime = 0.f;
+	}
+}
+
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	
+	CheckTimeSync(DeltaSeconds);
 	SetHUDTime();
+}
+
+float ABlasterPlayerController::GetServerTime()
+{
+	if (HasAuthority())
+	{
+		return GetWorld()->GetTimeSeconds();
+	}
+	return GetWorld()->GetTimeSeconds() + ClientServerDelta;
+}
+
+void ABlasterPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if (IsLocalController())
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
+	}
 }
