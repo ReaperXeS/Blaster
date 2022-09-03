@@ -5,6 +5,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
+#include "Blaster/Weapon/WeaponTypes.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
@@ -25,7 +26,7 @@ void ABlasterPlayerController::SetHUDWeaponAmmo(const int32 Ammo)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
 	{
-		UpdateTextBockText(GetBlasterHUD()->CharacterOverlay->WeaponAmmoAmount, Ammo);
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->WeaponAmmoAmount, Ammo);
 	}
 }
 
@@ -33,7 +34,25 @@ void ABlasterPlayerController::SetHUDCarriedAmmo(const int32 Ammo)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
 	{
-		UpdateTextBockText(GetBlasterHUD()->CharacterOverlay->CarriedAmmoAmount, Ammo);
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->CarriedAmmoAmount, Ammo);
+	}
+}
+
+void ABlasterPlayerController::SetHUDCarriedWeaponType(const EWeaponType WeaponType)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		FString WeaponTypeString;
+		switch (WeaponType)
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			WeaponTypeString = "Assault Rifle";
+			break;
+		default:
+			WeaponTypeString = "Patate";
+			break;
+		}
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->CarriedAmmoWeaponType, WeaponTypeString);
 	}
 }
 
@@ -41,7 +60,7 @@ void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
 	{
-		UpdateTextBockText(GetBlasterHUD()->CharacterOverlay->DefeatsAmount, Defeats);
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->DefeatsAmount, Defeats);
 	}
 }
 
@@ -64,7 +83,7 @@ void ABlasterPlayerController::SetHUDScore(const float Score)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
 	{
-		UpdateTextBockText(GetBlasterHUD()->CharacterOverlay->ScoreAmount, FMath::FloorToInt(Score));
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->ScoreAmount, FMath::FloorToInt(Score));
 	}
 }
 
@@ -79,11 +98,16 @@ ABlasterHUD* ABlasterPlayerController::GetBlasterHUD()
 	return BlasterHUD;
 }
 
-void ABlasterPlayerController::UpdateTextBockText(UTextBlock* TextBlock, const int32 Value) const
+void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const int32 Value) const
+{
+	const auto TextString = FString::Printf(TEXT("%d"), Value);
+	UpdateTextBlockText(TextBlock, TextString);
+}
+
+void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const FString Text) const
 {
 	if (TextBlock)
 	{
-		const FString Text = FString::Printf(TEXT("%d"), Value);
 		TextBlock->SetText(FText::FromString(Text));
 	}
 }
