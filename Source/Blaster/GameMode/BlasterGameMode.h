@@ -20,6 +20,9 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(EditDefaultsOnly)
+	float MatchTime = 120.f;
+
+	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.f;
 
 	float LevelStartingTime = 0.f;

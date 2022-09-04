@@ -21,12 +21,12 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDCarriedWeaponType(EWeaponType WeaponType);
 	void SetHUDMatchCountdown(const float CountdownTime);
+	void SetHUDAnnoucementCountdown(const float CountdownTime);
 
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
-	void CheckTimeSync(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	// Synced with server world clock
 	virtual float GetServerTime();
@@ -34,6 +34,7 @@ public:
 	// Synced with server clock as soon as possible
 	virtual void ReceivedPlayer() override;
 	void OnMatchStateSet(FName State);
+	void HandleMatchHasStarted();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
@@ -64,12 +65,26 @@ protected:
 	float TimeSyncFrequency = 5.f;
 
 	float TimeSyncRunningTime = 0.f;
+	void CheckTimeSync(float DeltaSeconds);
+
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
+
+	// Called when from ServerCheckMatchState();
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
+
 public:
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
-	float MatchTime = 120.f;
+	/*********************************
+	 * Variables set from Game Mode
+	 ********************************/
+	float LevelStartingTime = 0.f;
+	float MatchTime = 0.f;
+	float WarmupTime = 0.f;
 	uint32 CountDownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)

@@ -10,6 +10,8 @@
 #include "Components/TextBlock.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/HUD/Announcement.h"
+#include "Kismet/GameplayStatics.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
 {
@@ -69,6 +71,17 @@ void ABlasterPlayerController::SetHUDMatchCountdown(const float CountdownTime)
 	}
 }
 
+void ABlasterPlayerController::SetHUDAnnoucementCountdown(const float CountdownTime)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->Announcement)
+	{
+		const int32 Minutes = FMath::FloorToInt(CountdownTime / 60);
+		const int32 Seconds = CountdownTime - Minutes * 60;
+		const FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		UpdateTextBlockText(GetBlasterHUD()->Announcement->WarmupTime, CountdownText);
+	}
+}
+
 void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
@@ -103,6 +116,7 @@ void ABlasterPlayerController::SetHUDScore(const float Score)
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	ServerCheckMatchState();
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -134,20 +148,29 @@ void ABlasterPlayerController::UpdateTextBlockText(UTextBlock* TextBlock, const 
 
 void ABlasterPlayerController::SetHUDTime()
 {
-	const uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+	uint32 SecondsLeft = 0;
+	// ServerTime is since the game started (including time in menu)
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		SecondsLeft = FMath::CeilToInt(WarmupTime - GetServerTime() + LevelStartingTime);
+	}
+	else if (MatchState == MatchState::InProgress)
+	{
+		SecondsLeft = FMath::CeilToInt(WarmupTime + MatchTime - GetServerTime() + LevelStartingTime);
+	}
+
 	if (CountDownInt != SecondsLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetServerTime());
+		if (MatchState == MatchState::WaitingToStart)
+		{
+			SetHUDAnnoucementCountdown(SecondsLeft);
+		}
+		else if (MatchState == MatchState::InProgress)
+		{
+			SetHUDMatchCountdown(SecondsLeft);
+		}
 	}
 	CountDownInt = SecondsLeft;
-}
-
-void ABlasterPlayerController::OnRep_MatchState()
-{
-	if (MatchState == MatchState::InProgress && GetBlasterHUD())
-	{
-		GetBlasterHUD()->AddCharacterOverlay();
-	}
 }
 
 void ABlasterPlayerController::ClientReportServerTime_Implementation(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest)
@@ -196,6 +219,33 @@ void ABlasterPlayerController::CheckTimeSync(const float DeltaSeconds)
 	}
 }
 
+void ABlasterPlayerController::ClientJoinMidgame_Implementation(const FName StateOfMatch, const float Warmup, const float Match, const float StartingTime)
+{
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
+	OnMatchStateSet(MatchState);
+	if (GetBlasterHUD() && MatchState == MatchState::WaitingToStart)
+	{
+		GetBlasterHUD()->AddAnnouncement();
+	}
+}
+
+void ABlasterPlayerController::ServerCheckMatchState_Implementation()
+{
+	if (const ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+
+		// Client client to sync values
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+	}
+}
+
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -229,6 +279,23 @@ void ABlasterPlayerController::OnMatchStateSet(const FName State)
 
 	if (MatchState == MatchState::InProgress && GetBlasterHUD())
 	{
-		GetBlasterHUD()->AddCharacterOverlay();
+		HandleMatchHasStarted();
+	}
+}
+
+void ABlasterPlayerController::OnRep_MatchState()
+{
+	if (MatchState == MatchState::InProgress && GetBlasterHUD())
+	{
+		HandleMatchHasStarted();
+	}
+}
+
+void ABlasterPlayerController::HandleMatchHasStarted()
+{
+	GetBlasterHUD()->AddCharacterOverlay();
+	if (GetBlasterHUD()->Announcement)
+	{
+		GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
