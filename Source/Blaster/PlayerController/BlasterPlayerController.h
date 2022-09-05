@@ -21,7 +21,7 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);
 	void SetHUDCarriedWeaponType(EWeaponType WeaponType);
 	void SetHUDMatchCountdown(const float CountdownTime);
-	void SetHUDAnnoucementCountdown(const float CountdownTime);
+	void SetHUDAnnouncementCountdown(const float CountdownTime);
 
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDHealth(float Health, float MaxHealth);
@@ -35,11 +35,14 @@ public:
 	virtual void ReceivedPlayer() override;
 	void OnMatchStateSet(FName State);
 	void HandleMatchHasStarted();
+	void HandleCooldown();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 	virtual void BeginPlay() override;
 	class ABlasterHUD* GetBlasterHUD();
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
 
 	void UpdateTextBlockText(class UTextBlock* TextBlock, int32 Value) const;
 	void UpdateTextBlockText(UTextBlock* TextBlock, FString Text) const;
@@ -72,7 +75,7 @@ protected:
 
 	// Called when from ServerCheckMatchState();
 	UFUNCTION(Client, Reliable)
-	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime);
+	void ClientJoinMiddleOfGame(FName StateOfMatch, float Warmup, float Match, float StartingTime, float Cooldown);
 
 public:
 private:
@@ -82,6 +85,7 @@ private:
 	/*********************************
 	 * Variables set from Game Mode
 	 ********************************/
+	float CooldownTime = 0.f;
 	float LevelStartingTime = 0.f;
 	float MatchTime = 0.f;
 	float WarmupTime = 0.f;
