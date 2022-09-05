@@ -2,6 +2,7 @@
 
 #include "BlasterPlayerController.h"
 
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/HUD/CharacterOverlay.h"
@@ -353,6 +354,15 @@ void ABlasterPlayerController::HandleCooldown()
 			GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Visible);
 			UpdateTextBlockText(GetBlasterHUD()->Announcement->AnnouncementText, FString("New Match Starts in:"));
 			UpdateTextBlockText(GetBlasterHUD()->Announcement->InfoText, FString());
+		}
+	}
+
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn()))
+	{
+		BlasterCharacter->bDisableGameplay = true;
+		if (BlasterCharacter->GetCombatComponent())
+		{
+			BlasterCharacter->GetCombatComponent()->FireButtonPressed(false);
 		}
 	}
 }

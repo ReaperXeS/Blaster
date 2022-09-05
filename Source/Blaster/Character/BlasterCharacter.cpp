@@ -64,6 +64,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
 	DOREPLIFETIME(ABlasterCharacter, LastHitLocation);
+	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 
 void ABlasterCharacter::OnRep_ReplicatedMovement()
@@ -106,10 +107,7 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 	// Disable character movement
 	GetCharacterMovement()->DisableMovement(); // w-a-s-d
 	GetCharacterMovement()->StopMovementImmediately(); // disable rotation
-	if (BlasterPlayerController)
-	{
-		DisableInput(BlasterPlayerController); // can't continue to fire weapon, jump etc.
-	}
+	bDisableGameplay = true;
 
 	// Disable collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -159,6 +157,11 @@ void ABlasterCharacter::Destroyed()
 	{
 		EliminationBotComponent->DestroyComponent();
 	}
+
+	if (Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Destroy();
+	}
 }
 
 void ABlasterCharacter::BeginPlay()
@@ -172,9 +175,14 @@ void ABlasterCharacter::BeginPlay()
 	}
 }
 
-void ABlasterCharacter::Tick(float DeltaTime)
+void ABlasterCharacter::RotateInPlace(const float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
 
 	if (GetLocalRole() > ROLE_SimulatedProxy && IsLocallyControlled())
 	{
@@ -189,6 +197,13 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+}
+
+void ABlasterCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	RotateInPlace(DeltaTime);
 	HideCameraIfCharacterClose();
 	PollInit();
 }
@@ -308,6 +323,11 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, class 
 
 void ABlasterCharacter::MoveForward(float aValue)
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Controller != nullptr && aValue != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -318,6 +338,11 @@ void ABlasterCharacter::MoveForward(float aValue)
 
 void ABlasterCharacter::MoveRight(float aValue)
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Controller != nullptr && aValue != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -338,6 +363,11 @@ void ABlasterCharacter::LookUp(float aValue)
 
 void ABlasterCharacter::EquipButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
 		if (HasAuthority())
@@ -361,6 +391,11 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 
 void ABlasterCharacter::CrouchButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -374,6 +409,11 @@ void ABlasterCharacter::CrouchButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst (const function cannot be used in binding)
 void ABlasterCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
 		Combat->Reload();
@@ -383,6 +423,11 @@ void ABlasterCharacter::ReloadButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst (const function cannot be used in binding)
 void ABlasterCharacter::AimButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
 		Combat->SetAiming(true);
@@ -392,6 +437,11 @@ void ABlasterCharacter::AimButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst (const function cannot be used in binding)
 void ABlasterCharacter::AimButtonReleased()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
 		Combat->SetAiming(false);
@@ -491,6 +541,11 @@ void ABlasterCharacter::SimProxiesTurn()
 
 void ABlasterCharacter::Jump()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -504,6 +559,11 @@ void ABlasterCharacter::Jump()
 // ReSharper disable once CppMemberFunctionMayBeConst (const function cannot be used in binding)
 void ABlasterCharacter::FireButtonPressed()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
 		Combat->FireButtonPressed(true);
@@ -513,6 +573,11 @@ void ABlasterCharacter::FireButtonPressed()
 // ReSharper disable once CppMemberFunctionMayBeConst (const function cannot be used in binding)
 void ABlasterCharacter::FireButtonReleased()
 {
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);

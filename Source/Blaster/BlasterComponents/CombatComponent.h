@@ -27,6 +27,7 @@ public:
 	void EquipWeapon(class AWeapon* aWeaponToEquip);
 	void Reload();
 	void UpdateAmmoValues();
+	void FireButtonPressed(bool aIsPressed);
 protected:
 	virtual void BeginPlay() override;
 
@@ -36,8 +37,6 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon() const;
-
-	void FireButtonPressed(bool aIsPressed);
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
