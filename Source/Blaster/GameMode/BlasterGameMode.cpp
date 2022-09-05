@@ -5,6 +5,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -22,10 +23,12 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter, 
 {
 	ABlasterPlayerState* AttackerPlayerState = AttackerController ? AttackerController->GetPlayerState<ABlasterPlayerState>() : nullptr;
 	ABlasterPlayerState* EliminatedPlayerState = EliminatedController ? EliminatedController->GetPlayerState<ABlasterPlayerState>() : nullptr;
+	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
 
-	if (AttackerPlayerState && AttackerPlayerState != EliminatedPlayerState)
+	if (AttackerPlayerState && AttackerPlayerState != EliminatedPlayerState && BlasterGameState)
 	{
 		AttackerPlayerState->AddToScore(1.f);
+		BlasterGameState->UpdateTopScore(AttackerPlayerState);
 	}
 
 	if (EliminatedPlayerState)

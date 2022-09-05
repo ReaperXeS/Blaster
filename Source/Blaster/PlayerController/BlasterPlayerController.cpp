@@ -11,7 +11,9 @@
 #include "Components/TextBlock.h"
 #include "Net/UnrealNetwork.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/HUD/Announcement.h"
+#include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
@@ -353,7 +355,32 @@ void ABlasterPlayerController::HandleCooldown()
 		{
 			GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Visible);
 			UpdateTextBlockText(GetBlasterHUD()->Announcement->AnnouncementText, FString("New Match Starts in:"));
-			UpdateTextBlockText(GetBlasterHUD()->Announcement->InfoText, FString());
+
+			FString InfoTextString = FString();
+			if (const ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)))
+			{
+				if (const TArray<ABlasterPlayerState*> TopPlayers = BlasterGameState->TopScoringPlayers; TopPlayers.Num() == 0)
+				{
+					InfoTextString = FString("There is no winner.");
+				}
+				else if (TopPlayers.Num() == 1 && TopPlayers[0] == GetPlayerState<ABlasterPlayerState>())
+				{
+					InfoTextString = FString("You are the winner!");
+				}
+				else if (TopPlayers.Num() == 1)
+				{
+					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+				}
+				else if (TopPlayers.Num() > 1)
+				{
+					InfoTextString = FString("Players tied for the win:\n");
+					for (const auto TiedPlayer : TopPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+			}
+			UpdateTextBlockText(GetBlasterHUD()->Announcement->InfoText, InfoTextString);
 		}
 	}
 
