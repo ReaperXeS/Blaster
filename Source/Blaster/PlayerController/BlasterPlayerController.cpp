@@ -199,6 +199,12 @@ void ABlasterPlayerController::SetHUDTime()
 		else if (MatchState == MatchState::InProgress)
 		{
 			SetHUDMatchCountdown(TimeLeft);
+			if (!bCooldownUrgencyPlaying && TimeLeft > 0.f && TimeLeft <= 30.f && GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay && GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay->CooldownUrgency)
+			{
+				// Should have a flag or something to know if it's already playing and another one to get back to White?
+				GetBlasterHUD()->CharacterOverlay->PlayAnimation(GetBlasterHUD()->CharacterOverlay->CooldownUrgency, 0, 30);
+				bCooldownUrgencyPlaying = true;
+			}
 		}
 	}
 	CountDownInt = SecondsLeft;

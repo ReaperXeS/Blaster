@@ -90,6 +90,7 @@ private:
 	float MatchTime = 0.f;
 	float WarmupTime = 0.f;
 	uint32 CountDownInt = 0;
+	bool bCooldownUrgencyPlaying = false;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
 	FName MatchState;
