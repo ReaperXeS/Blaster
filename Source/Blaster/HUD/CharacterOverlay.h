@@ -40,4 +40,10 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CarriedAmmoWeaponType;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MatchCountdownText;
+
+	UPROPERTY(Transient, meta = (BindWidgetAnim))
+	UWidgetAnimation* CooldownUrgency;
 };

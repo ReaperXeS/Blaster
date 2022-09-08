@@ -35,9 +35,13 @@ public:
 	void MulticastElimination();
 
 	virtual void Destroyed() override;
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay = false;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void RotateInPlace(float DeltaTime);
 
 	void MoveForward(float aValue);
 	void MoveRight(float aValue);
@@ -217,4 +221,5 @@ public:
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	ECombatState GetCombatState();
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };

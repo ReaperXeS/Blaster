@@ -6,6 +6,11 @@
 #include "GameFramework/GameMode.h"
 #include "BlasterGameMode.generated.h"
 
+namespace MatchState
+{
+	extern BLASTER_API const FName Cooldown; // Match ended but play announcement
+}
+
 /**
  * 
  */
@@ -14,6 +19,26 @@ class BLASTER_API ABlasterGameMode : public AGameMode
 {
 	GENERATED_BODY()
 public:
+	ABlasterGameMode();
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* EliminatedController, ABlasterPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
+	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(EditDefaultsOnly)
+	float MatchTime = 120.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float WarmupTime = 10.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float CooldownTime = 10.f;
+
+	float LevelStartingTime = 0.f;
+protected:
+	virtual void BeginPlay() override;
+	virtual void OnMatchStateSet() override;
+private:
+	float CountdownTime = 0.f;
+public:
+	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 };
