@@ -55,6 +55,9 @@ void ABlasterPlayerController::SetHUDCarriedWeaponType(const EWeaponType WeaponT
 		case EWeaponType::EWT_AssaultRifle:
 			WeaponTypeString = "Assault Rifle";
 			break;
+		case EWeaponType::EWT_RocketLauncher:
+			WeaponTypeString = "Rocket Launcher";
+			break;
 		default:
 			WeaponTypeString = "Patate";
 			break;
@@ -341,10 +344,14 @@ void ABlasterPlayerController::OnRep_MatchState()
 
 void ABlasterPlayerController::HandleMatchHasStarted()
 {
-	GetBlasterHUD()->AddCharacterOverlay();
-	if (GetBlasterHUD()->Announcement)
+	if (GetBlasterHUD())
 	{
-		GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		GetBlasterHUD()->AddCharacterOverlay();
+
+		if (GetBlasterHUD()->Announcement)
+		{
+			GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 
