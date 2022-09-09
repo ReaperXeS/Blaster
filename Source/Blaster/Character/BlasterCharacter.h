@@ -64,6 +64,11 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
 
+	UFUNCTION()
+	void ReceiveDamageRadial(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, FVector Origin, FHitResult HitInfo, class AController* InstigatedBy, AActor* DamageCauser);
+
+	void ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy);
+
 	void UpdateHUD();
 
 	// Poll for any relevant classes and initialize our HUD

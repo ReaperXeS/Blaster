@@ -177,6 +177,7 @@ void ABlasterCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		OnTakePointDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+		OnTakeRadialDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamageRadial);
 	}
 }
 
@@ -307,14 +308,27 @@ void ABlasterCharacter::PlayHitReactMontage() const
 
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser)
 {
+	ReceiveDamageGeneric(Damage, HitLocation, InstigatedBy);
+}
+
+void ABlasterCharacter::ReceiveDamageRadial(AActor* DamagedActor, float Damage, const UDamageType* DamageType, FVector Origin, FHitResult HitInfo, AController* InstigatedBy, AActor* DamageCauser)
+{
+	ReceiveDamageGeneric(Damage, FVector::ZeroVector, InstigatedBy);
+}
+
+void ABlasterCharacter::ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy)
+{
 	// Called only on server
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUD();
 	PlayHitReactMontage();
 
 	// Will be replicated on client and calls OnRep_HitLocation
-	LastHitLocation = HitLocation;
-	OnRep_LastHitLocation(); // execute client code on server too.
+	if (HitLocation != FVector::ZeroVector)
+	{
+		LastHitLocation = HitLocation;
+		OnRep_LastHitLocation(); // execute client code on server too.
+	}
 
 	if (Health == 0.f)
 	{
