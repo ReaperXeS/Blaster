@@ -409,7 +409,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		// Make sure Start of Trace is in Front of the character.
 		if (Character)
 		{
-			const float DistanceToCharacter = (Character->GetActorLocation() = Start).Size();
+			const float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
 			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.f);
 		}
 		const FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH;
