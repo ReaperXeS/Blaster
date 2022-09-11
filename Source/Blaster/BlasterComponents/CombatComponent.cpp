@@ -424,12 +424,6 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			HUDPackage.CrosshairsColor = FLinearColor::White;
 			bTargetIsAnEnemy = false;
-
-			// TODO: Sometimes the crosshairs is not red while aiming the enemy.
-			// if (TraceHitResult.GetActor())
-			// {
-			// 	UE_LOG(LogTemp, Warning, TEXT("Actor %s is not an enemy"), *TraceHitResult.GetActor()->GetName());
-			// }
 		}
 
 		if (!TraceHitResult.bBlockingHit)

@@ -6,6 +6,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "particles/ParticleSystemComponent.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -16,8 +17,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	{
 		return;
 	}
-	AController* OwnerController = OwnerPawn->GetController();
-	if (const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash"); MuzzleFlashSocket && OwnerController)
+
+	if (const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash"); MuzzleFlashSocket)
 	{
 		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		const FVector Start = SocketTransform.GetLocation();
@@ -27,10 +28,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		{
 			FHitResult FireHit;
 			World->LineTraceSingleByChannel(FireHit, Start, End, ECC_Visibility);
-
+			FVector BeamEnd = End;
 			if (FireHit.bBlockingHit)
 			{
-				if (ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(FireHit.GetActor()); HitCharacter && HasAuthority())
+				ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(FireHit.GetActor());
+				AController* OwnerController = OwnerPawn->GetController();
+				if (HitCharacter && HasAuthority() && OwnerController)
 				{
 					UGameplayStatics::ApplyPointDamage(HitCharacter, Damage, FireHit.ImpactPoint, FireHit, OwnerController, this, UDamageType::StaticClass());
 				}
@@ -38,6 +41,16 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				if (ImpactParticles)
 				{
 					UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
+				}
+
+				BeamEnd = FireHit.ImpactPoint;
+			}
+
+			if (BeamParticles) // Beam particles are optional
+			{
+				if (const auto BeamParticleSystemComp = UGameplayStatics::SpawnEmitterAtLocation(World, BeamParticles, SocketTransform))
+				{
+					BeamParticleSystemComp->SetVectorParameter(FName("Target"), BeamEnd);
 				}
 			}
 		}

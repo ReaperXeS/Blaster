@@ -19,6 +19,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	class UParticleSystem* ImpactParticles;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UParticleSystem* BeamParticles;
 public:
 	virtual void Fire(const FVector& HitTarget) override;
 };
