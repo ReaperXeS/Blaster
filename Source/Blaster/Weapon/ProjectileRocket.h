@@ -35,6 +35,9 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	USoundAttenuation* LoopingSoundAttenuation;
+
+	UPROPERTY(VisibleAnywhere)
+	class URocketMovementComponent* RocketMovementComponent;
 private:
 	UPROPERTY(EditAnywhere, Category = "Damage")
 	float DamageInnerRadius = 100.0f;

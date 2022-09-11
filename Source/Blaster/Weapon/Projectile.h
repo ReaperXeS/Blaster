@@ -31,10 +31,10 @@ protected:
 	class UBoxComponent* CollisionBox;
 
 	void PlayImpactEffects() const;
-private:
+
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
-
+private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer;
 
