@@ -115,6 +115,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_Ammo();
+	void HandleUpdateWeaponState() const;
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity = 30;

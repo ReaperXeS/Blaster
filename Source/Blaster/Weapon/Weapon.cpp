@@ -102,29 +102,46 @@ void AWeapon::OnRep_Ammo()
 	SetHUDAmmo();
 }
 
-// Server
-void AWeapon::SetWeaponState(EWeaponState aState)
+void AWeapon::HandleUpdateWeaponState() const
 {
-	WeaponState = aState;
-
 	switch (WeaponState)
 	{
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		SetEnablePhysics(false);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if (WeaponType == EWeaponType::EWT_SubMachineGun)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+		}
 		break;
 	case EWeaponState::EWS_Dropped:
 		if (HasAuthority())
 		{
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
-		SetEnablePhysics(true);
+		WeaponMesh->SetSimulatePhysics(true);
+		WeaponMesh->SetEnableGravity(true);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Block);
+		WeaponMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		WeaponMesh->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		break;
 	default:
 		break;
 	}
+}
+
+// Server
+void AWeapon::SetWeaponState(EWeaponState aState)
+{
+	WeaponState = aState;
+
+	HandleUpdateWeaponState();
 }
 
 bool AWeapon::IsEmpty() const
@@ -136,19 +153,7 @@ bool AWeapon::IsEmpty() const
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AWeapon::OnRep_WeaponState()
 {
-	switch (WeaponState)
-	{
-	case EWeaponState::EWS_Equipped:
-		ShowPickupWidget(false);
-
-		SetEnablePhysics(false);
-		break;
-	case EWeaponState::EWS_Dropped:
-		SetEnablePhysics(true);
-		break;
-	default:
-		break;
-	}
+	HandleUpdateWeaponState();
 }
 
 void AWeapon::ShowPickupWidget(bool bShowWidget) const
