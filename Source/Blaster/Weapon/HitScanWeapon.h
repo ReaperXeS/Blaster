@@ -22,6 +22,15 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	UParticleSystem* BeamParticles;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	USoundCue* FireSound;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	USoundCue* HitSound;
 public:
 	virtual void Fire(const FVector& HitTarget) override;
 };
