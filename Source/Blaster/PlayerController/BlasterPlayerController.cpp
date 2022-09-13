@@ -67,6 +67,9 @@ void ABlasterPlayerController::SetHUDCarriedWeaponType(const EWeaponType WeaponT
 		case EWeaponType::EWT_SniperRifle:
 			WeaponTypeString = "Sniper Rifle";
 			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			WeaponTypeString = "Grenade Launcher";
+			break;
 		default:
 			WeaponTypeString = "Patate";
 			break;
