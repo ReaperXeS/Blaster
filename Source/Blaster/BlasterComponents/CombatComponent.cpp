@@ -355,11 +355,20 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::SetAiming(bool aIsAiming)
 {
+	if (Character == nullptr || EquippedWeapon == nullptr)
+	{
+		return;
+	}
 	bAiming = aIsAiming; // Prevent lag since it's cosmetic
 	ServerSetAiming(aIsAiming); // Will call the Server if executed on client
 	if (Character)
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
+
+	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		Character->ShowSniperScopeWidget(bAiming);
 	}
 }
 

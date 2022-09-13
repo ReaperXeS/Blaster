@@ -128,6 +128,12 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EliminationBotSound, EliminationBotSpawnPoint, GetActorRotation());
 		}
 	}
+
+	// Hide sniper scope if we were aiming with a sniper weapon and get eliminated
+	if (IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 
 void ABlasterCharacter::UpdateHUD()
