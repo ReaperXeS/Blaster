@@ -17,14 +17,34 @@ void AShotgun::Fire(const FVector& HitTarget)
 	{
 		return;
 	}
-
-	if (const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash"); MuzzleFlashSocket)
+	const UWorld* World = GetWorld();
+	if (const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash"); MuzzleFlashSocket && World)
 	{
 		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		const FVector Start = SocketTransform.GetLocation();
+		AController* OwnerController = OwnerPawn->GetController();
 		for (uint32 i = 0; i < NumberOfPellets; ++i)
 		{
-			const FVector End = TraceEndWithScatter(Start, HitTarget);
+			FHitResult HitResult;
+			WeaponTraceHit(Start, HitTarget, HitResult);
+
+			if (HitResult.bBlockingHit)
+			{
+				if (ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()); HasAuthority() && HitCharacter)
+				{
+					UGameplayStatics::ApplyPointDamage(HitCharacter, Damage, HitResult.ImpactPoint, HitResult, OwnerController, this, UDamageType::StaticClass());
+				}
+
+				if (ImpactParticles)
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, HitResult.ImpactPoint, HitResult.ImpactNormal.Rotation());
+				}
+
+				if (HitSound) // Hit sound is optional
+				{
+					UGameplayStatics::PlaySoundAtLocation(World, HitSound, HitResult.ImpactPoint, 0.5f, FMath::FRandRange(-.5f, .5f));
+				}
+			}
 		}
 	}
 }
