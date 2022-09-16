@@ -90,3 +90,11 @@ void UBlasterAnimInstance::FinishReloading()
 		BlasterCharacter->GetCombatComponent()->FinishReloading();
 	}
 }
+
+void UBlasterAnimInstance::ShotgunShellReload()
+{
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->GetCombatComponent()->ShotgunShellReload();
+	}
+}

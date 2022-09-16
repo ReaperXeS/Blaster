@@ -25,7 +25,12 @@ public:
 	void EquipWeapon(class AWeapon* aWeaponToEquip);
 	void Reload();
 	void UpdateAmmoValues();
+	void UpdateShotgunAmmoValues();
 	void FireButtonPressed(bool aIsPressed);
+
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd();
 protected:
 	virtual void BeginPlay() override;
 

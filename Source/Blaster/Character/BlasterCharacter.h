@@ -230,4 +230,5 @@ public:
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	ECombatState GetCombatState();
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 };

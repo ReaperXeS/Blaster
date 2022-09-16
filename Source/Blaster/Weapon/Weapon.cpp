@@ -8,6 +8,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
 #include "Casing.h"
+#include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Engine/SkeletalMeshSocket.h"
 
@@ -99,6 +100,10 @@ void AWeapon::SpendRound()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AWeapon::OnRep_Ammo()
 {
+	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
+	{
+		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
+	}
 	SetHUDAmmo();
 }
 
@@ -147,6 +152,11 @@ void AWeapon::SetWeaponState(EWeaponState aState)
 bool AWeapon::IsEmpty() const
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull() const
+{
+	return Ammo >= MagCapacity;
 }
 
 // Client Only

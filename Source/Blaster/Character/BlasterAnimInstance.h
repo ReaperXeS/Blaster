@@ -21,6 +21,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
 private:
 	UPROPERTY(BlueprintReadOnly, Category = Character, meta = (AllowPrivateAccess = "true"))
 	class ABlasterCharacter* BlasterCharacter;

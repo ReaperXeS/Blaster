@@ -12,6 +12,7 @@
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "Blaster/Character/BlasterAnimInstance.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -121,6 +122,32 @@ void UCombatComponent::UpdateAmmoValues()
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 	EquippedWeapon->AddAmmo(ReloadAmount);
+}
+
+void UCombatComponent::UpdateShotgunAmmoValues()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr)
+	{
+		return;
+	}
+
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	EquippedWeapon->AddAmmo(1);
+	bCanFire = true;
+	if (EquippedWeapon->IsFull() || CarriedAmmo == 0)
+	{
+		// Jump to shotgun end section
+		JumpToShotgunEnd();
+	}
 }
 
 void UCombatComponent::ServerReload_Implementation()
@@ -337,7 +364,16 @@ void UCombatComponent::FireTimerFinished()
 
 bool UCombatComponent::CanFire() const
 {
-	return bCanFire && EquippedWeapon && !EquippedWeapon->IsEmpty() && CombatState == ECombatState::ECS_Unoccupied;
+	if (bCanFire && EquippedWeapon && !EquippedWeapon->IsEmpty())
+	{
+		// Shotgun can interrupt reload to fire.
+		if (CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+		{
+			return true;
+		}
+		return CombatState == ECombatState::ECS_Unoccupied;
+	}
+	return false;
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
@@ -350,6 +386,12 @@ void UCombatComponent::OnRep_CarriedAmmo()
 		{
 			Controller->SetHUDCarriedWeaponType(EquippedWeapon->GetWeaponType());
 		}
+	}
+
+	// If reloading shotgun and carrier ammo is empty stop reloading
+	if (CombatState == ECombatState::ECS_Reloading && EquippedWeapon && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun && CarriedAmmo == 0)
+	{
+		JumpToShotgunEnd();
 	}
 }
 
@@ -397,6 +439,22 @@ void UCombatComponent::FireButtonPressed(bool aIsPressed)
 	if (bFireButtonPressed)
 	{
 		Fire();
+	}
+}
+
+void UCombatComponent::ShotgunShellReload()
+{
+	if (Character && Character->HasAuthority())
+	{
+		UpdateShotgunAmmoValues();
+	}
+}
+
+void UCombatComponent::JumpToShotgunEnd()
+{
+	if (UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance(); AnimInstance && Character->GetReloadMontage())
+	{
+		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"));
 	}
 }
 
@@ -449,9 +507,19 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	if (EquippedWeapon && Character && CombatState == ECombatState::ECS_Unoccupied)
+	if (EquippedWeapon && Character)
 	{
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
+		// Shotgun can interrupt reload to fire.
+		if (CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
+		{
+			CombatState = ECombatState::ECS_Unoccupied;
+		}
+
+		// Fire if unoccupied
+		if (CombatState == ECombatState::ECS_Unoccupied)
+		{
+			Character->PlayFireMontage(bAiming);
+			EquippedWeapon->Fire(TraceHitTarget);
+		}
 	}
 }
