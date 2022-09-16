@@ -21,9 +21,9 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 
 	// DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
 	// DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, true);
-	// DrawDebugLine(GetWorld(),TraceStart,FVector(TraceStart + ToEndLoc * 8000.f / ToEndLoc.Size()), FColor::Cyan,true);
+	// DrawDebugLine(GetWorld(),TraceStart,FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()), FColor::Cyan,true);
 
-	return FVector(TraceStart + ToEndLoc * 8000.f / ToEndLoc.Size());
+	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());
 }
 
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHitResult) const

@@ -75,6 +75,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	class USoundCue* EquipSound;
+
+	/*********************************************/
+	/* Enable/Disable Custom Depth on Pickup     */
+	/*********************************************/
+	void EnableCustomDepth(bool bEnabled) const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
