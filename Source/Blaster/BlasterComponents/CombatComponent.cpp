@@ -54,6 +54,11 @@ void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 		return;
 	}
 
+	if (CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
 	if (EquippedWeapon)
 	{
 		EquippedWeapon->Drop();
@@ -97,7 +102,7 @@ void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading)
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		ServerReload();
 	}
@@ -171,6 +176,12 @@ void UCombatComponent::OnRep_CombatState()
 		if (bFireButtonPressed)
 		{
 			Fire();
+		}
+		break;
+	case ECombatState::ECS_ThrowingGrenade:
+		if (Character && !Character->IsLocallyControlled())
+		{
+			Character->PlayThrowGrenadeMontage();
 		}
 		break;
 	default:
@@ -455,6 +466,39 @@ void UCombatComponent::JumpToShotgunEnd()
 	if (UAnimInstance* AnimInstance = Character->GetMesh()->GetAnimInstance(); AnimInstance && Character->GetReloadMontage())
 	{
 		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"));
+	}
+}
+
+void UCombatComponent::ThrowGrenade()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
+
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
+
+		if (!Character->HasAuthority())
+		{
+			ServerThrowGrenade();
+		}
+	}
+}
+
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation()
+{
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character)
+	{
+		Character->PlayThrowGrenadeMontage();
 	}
 }
 

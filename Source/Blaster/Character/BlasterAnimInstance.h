@@ -20,10 +20,13 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)
-	void FinishReloading();
+	void FinishReloading() const;
 
 	UFUNCTION(BlueprintCallable)
-	void ShotgunShellReload();
+	void ShotgunShellReload() const;
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished() const;
 private:
 	UPROPERTY(BlueprintReadOnly, Category = Character, meta = (AllowPrivateAccess = "true"))
 	class ABlasterCharacter* BlasterCharacter;

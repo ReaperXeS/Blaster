@@ -31,6 +31,12 @@ public:
 	void ShotgunShellReload();
 
 	void JumpToShotgunEnd();
+	void ThrowGrenade();
+
+	void ThrowGrenadeFinished();
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
 protected:
 	virtual void BeginPlay() override;
 

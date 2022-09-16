@@ -26,6 +26,7 @@ public:
 	void PlayReloadMontage() const;
 	// ReSharper disable once IdentifierTypo
 	void PlayElimMontage() const;
+	void PlayThrowGrenadeMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -62,6 +63,7 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void ThrowGrenadeButtonPressed();
 
 	void PlayHitReactMontage() const;
 	UFUNCTION()
@@ -122,6 +124,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	// ReSharper disable once IdentifierTypo
 	UAnimMontage* ElimMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ThrowGrenadeMontage;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactPlayerParticles;
