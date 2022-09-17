@@ -27,6 +27,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished() const;
+
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade() const;
 private:
 	UPROPERTY(BlueprintReadOnly, Category = Character, meta = (AllowPrivateAccess = "true"))
 	class ABlasterCharacter* BlasterCharacter;

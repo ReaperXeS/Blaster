@@ -189,6 +189,11 @@ void ABlasterCharacter::BeginPlay()
 		OnTakePointDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 		OnTakeRadialDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamageRadial);
 	}
+
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
+	}
 }
 
 void ABlasterCharacter::RotateInPlace(const float DeltaTime)

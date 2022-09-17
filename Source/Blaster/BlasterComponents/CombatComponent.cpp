@@ -116,6 +116,14 @@ void UCombatComponent::ReloadIfEmpty()
 	}
 }
 
+void UCombatComponent::ShowGrenade(const bool bShow) const
+{
+	if (Character && Character->GetAttachedGrenade())
+	{
+		Character->GetAttachedGrenade()->SetVisibility(bShow);
+	}
+}
+
 void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 {
 	if (Character == nullptr || aWeaponToEquip == nullptr)
@@ -207,6 +215,7 @@ void UCombatComponent::OnRep_CombatState()
 	case ECombatState::ECS_ThrowingGrenade:
 		if (Character && !Character->IsLocallyControlled())
 		{
+			ShowGrenade(true);
 			Character->PlayThrowGrenadeMontage();
 			AttachActorToLeftHand(EquippedWeapon);
 		}
@@ -497,6 +506,7 @@ void UCombatComponent::ThrowGrenade()
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
+		ShowGrenade(true);
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 
@@ -518,6 +528,7 @@ void UCombatComponent::ServerThrowGrenade_Implementation()
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
+		ShowGrenade(true);
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
 	}

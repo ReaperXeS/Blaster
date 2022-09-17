@@ -34,6 +34,7 @@ public:
 	void ThrowGrenade();
 
 	void ThrowGrenadeFinished();
+	void ShowGrenade(const bool bShow) const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
@@ -45,6 +46,7 @@ protected:
 	void UpdateCarriedAmmo(const int32 Amount);
 	void PlayEquipWeaponSound() const;
 	void ReloadIfEmpty();
+
 
 	void SetAiming(bool aIsAiming);
 	UFUNCTION(Server, Reliable)
