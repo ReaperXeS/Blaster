@@ -111,6 +111,6 @@ void UBlasterAnimInstance::LaunchGrenade() const
 {
 	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
 	{
-		BlasterCharacter->GetCombatComponent()->ShowGrenade(false);
+		BlasterCharacter->GetCombatComponent()->LaunchGrenade();
 	}
 }

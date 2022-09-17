@@ -13,6 +13,7 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "Blaster/Character/BlasterAnimInstance.h"
+#include "Blaster/Weapon/Projectile.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -498,7 +499,7 @@ void UCombatComponent::JumpToShotgunEnd()
 
 void UCombatComponent::ThrowGrenade()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied)
+	if (CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr)
 	{
 		return;
 	}
@@ -521,6 +522,25 @@ void UCombatComponent::ThrowGrenadeFinished()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
 	AttachActorToRightHand(EquippedWeapon);
+}
+
+void UCombatComponent::LaunchGrenade() const
+{
+	ShowGrenade(false);
+
+	// Spawn grenade on server
+	if (Character && Character->HasAuthority() && GrenadeClass && Character->GetAttachedGrenade())
+	{
+		const FVector SpawnLocation = Character->GetAttachedGrenade()->GetComponentLocation();
+		const FVector ToTarget = HitTarget - SpawnLocation;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character;
+		SpawnParams.Instigator = Character;
+		if (UWorld* World = GetWorld())
+		{
+			World->SpawnActor<AProjectile>(GrenadeClass, SpawnLocation, ToTarget.Rotation(), SpawnParams);
+		}
+	}
 }
 
 void UCombatComponent::ServerThrowGrenade_Implementation()

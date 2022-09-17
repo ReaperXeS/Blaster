@@ -34,10 +34,14 @@ public:
 	void ThrowGrenade();
 
 	void ThrowGrenadeFinished();
+	void LaunchGrenade() const;
 	void ShowGrenade(const bool bShow) const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerThrowGrenade();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;
 protected:
 	virtual void BeginPlay() override;
 	void DropEquippedWeapon() const;
