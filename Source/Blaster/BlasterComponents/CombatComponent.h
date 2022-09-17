@@ -35,6 +35,8 @@ public:
 
 	void ThrowGrenadeFinished();
 	void LaunchGrenade() const;
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target) const;
 	void ShowGrenade(const bool bShow) const;
 
 	UFUNCTION(Server, Reliable)
