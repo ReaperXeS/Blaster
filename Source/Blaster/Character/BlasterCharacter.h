@@ -215,6 +215,12 @@ private:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
+	/*****************************************/
+	/* 	Grenade					*/
+	/*****************************************/
+	UPROPERTY(EditAnywhere, Category = "Grenade")
+	UStaticMeshComponent* AttachedGrenade;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
