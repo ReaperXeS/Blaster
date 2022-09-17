@@ -39,6 +39,12 @@ public:
 	void ServerThrowGrenade();
 protected:
 	virtual void BeginPlay() override;
+	void DropEquippedWeapon() const;
+	void AttachActorToLeftHand(AActor* ActorToAttached) const;
+	void AttachActorToRightHand(AActor* ActorToAttached) const;
+	void UpdateCarriedAmmo(const int32 Amount);
+	void PlayEquipWeaponSound() const;
+	void ReloadIfEmpty();
 
 	void SetAiming(bool aIsAiming);
 	UFUNCTION(Server, Reliable)
