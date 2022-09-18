@@ -34,6 +34,20 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, Grenades);
 }
 
+void UCombatComponent::PickupAmmo(const EWeaponType WeaponType, int32 AmmoAmount)
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxCarriedAmmo);
+		UpdateCarriedAmmo(0);
+	}
+
+	if (EquippedWeapon && EquippedWeapon->GetWeaponType() == WeaponType && EquippedWeapon->IsEmpty())
+	{
+		Reload();
+	}
+}
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -80,7 +94,7 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttached) const
 	}
 }
 
-void UCombatComponent::UpdateCarriedAmmo(const int32 Amount)
+void UCombatComponent::UpdateCarriedAmmo(const int32 AmountToAdd)
 {
 	if (EquippedWeapon == nullptr)
 	{
@@ -89,7 +103,7 @@ void UCombatComponent::UpdateCarriedAmmo(const int32 Amount)
 
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= Amount;
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= AmountToAdd;
 		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 
@@ -99,7 +113,7 @@ void UCombatComponent::UpdateCarriedAmmo(const int32 Amount)
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 		Controller->SetHUDCarriedWeaponType(EquippedWeapon->GetWeaponType());
 	}
-	EquippedWeapon->AddAmmo(Amount);
+	EquippedWeapon->AddAmmo(AmountToAdd);
 }
 
 void UCombatComponent::PlayEquipWeaponSound() const

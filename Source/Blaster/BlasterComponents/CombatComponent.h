@@ -45,12 +45,14 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> GrenadeClass;
+
+	void PickupAmmo(const EWeaponType WeaponType, int32 AmmoAmount);
 protected:
 	virtual void BeginPlay() override;
 	void DropEquippedWeapon() const;
 	void AttachActorToLeftHand(AActor* ActorToAttached) const;
 	void AttachActorToRightHand(AActor* ActorToAttached) const;
-	void UpdateCarriedAmmo(const int32 Amount);
+	void UpdateCarriedAmmo(const int32 AmountToAdd);
 	void PlayEquipWeaponSound() const;
 	void ReloadIfEmpty();
 
@@ -152,6 +154,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 500;
 
 	UPROPERTY(ReplicatedUsing=OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
