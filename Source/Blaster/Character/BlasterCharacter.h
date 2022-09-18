@@ -97,6 +97,9 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* Combat;
 
+	UPROPERTY(VisibleAnywhere)
+	class UBuffComponent* Buff;
+
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 
