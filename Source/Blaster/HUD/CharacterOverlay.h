@@ -46,4 +46,7 @@ public:
 
 	UPROPERTY(Transient, meta = (BindWidgetAnim))
 	UWidgetAnimation* CooldownUrgency;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GrenadeText;
 };

@@ -75,6 +75,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	class USoundCue* EquipSound;
+
+	/*********************************************/
+	/* Enable/Disable Custom Depth on Pickup     */
+	/*********************************************/
+	void EnableCustomDepth(bool bEnabled) const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -115,6 +121,7 @@ private:
 
 	UFUNCTION()
 	void OnRep_Ammo();
+	void HandleUpdateWeaponState() const;
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity = 30;
@@ -137,6 +144,7 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	bool IsEmpty() const;
+	bool IsFull() const;
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };

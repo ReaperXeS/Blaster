@@ -55,6 +55,10 @@ ABlasterCharacter::ABlasterCharacter()
 	MinNetUpdateFrequency = 33.f;
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
+	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
+	AttachedGrenade->SetupAttachment(GetMesh(), TEXT("GrenadeSocket"));
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -128,6 +132,12 @@ void ABlasterCharacter::MulticastElimination_Implementation()
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), EliminationBotSound, EliminationBotSpawnPoint, GetActorRotation());
 		}
 	}
+
+	// Hide sniper scope if we were aiming with a sniper weapon and get eliminated
+	if (IsLocallyControlled() && Combat && Combat->bAiming && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
+	{
+		ShowSniperScopeWidget(false);
+	}
 }
 
 void ABlasterCharacter::UpdateHUD()
@@ -137,6 +147,7 @@ void ABlasterCharacter::UpdateHUD()
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 		BlasterPlayerController->HideDeathMessage();
+		BlasterPlayerController->SetHUDGrenades(GetCombatComponent()->GetGrenades());
 	}
 }
 
@@ -177,6 +188,12 @@ void ABlasterCharacter::BeginPlay()
 	if (HasAuthority())
 	{
 		OnTakePointDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+		OnTakeRadialDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamageRadial);
+	}
+
+	if (AttachedGrenade)
+	{
+		AttachedGrenade->SetVisibility(false);
 	}
 }
 
@@ -224,6 +241,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ABlasterCharacter::ThrowGrenadeButtonPressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABlasterCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABlasterCharacter::MoveRight);
@@ -272,6 +290,24 @@ void ABlasterCharacter::PlayReloadMontage() const
 		case EWeaponType::EWT_AssaultRifle:
 			SectionName = FName("Rifle");
 			break;
+		case EWeaponType::EWT_RocketLauncher:
+			SectionName = FName("RocketLauncher");
+			break;
+		case EWeaponType::EWT_Pistol:
+			SectionName = FName("Pistol");
+			break;
+		case EWeaponType::EWT_SubMachineGun:
+			SectionName = FName("Pistol");
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			SectionName = FName("SniperRifle");
+			break;
+		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Shotgun");
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			SectionName = FName("GrenadeLauncher");
+			break;
 		default:
 			SectionName = FName("Rifle");
 			break;
@@ -283,10 +319,17 @@ void ABlasterCharacter::PlayReloadMontage() const
 
 void ABlasterCharacter::PlayElimMontage() const
 {
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (ElimMontage && AnimInstance)
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); ElimMontage && AnimInstance)
 	{
 		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ABlasterCharacter::PlayThrowGrenadeMontage() const
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); ThrowGrenadeMontage && AnimInstance)
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
 	}
 }
 
@@ -307,14 +350,32 @@ void ABlasterCharacter::PlayHitReactMontage() const
 
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser)
 {
+	ReceiveDamageGeneric(Damage, HitLocation, InstigatedBy);
+}
+
+void ABlasterCharacter::ReceiveDamageRadial(AActor* DamagedActor, float Damage, const UDamageType* DamageType, FVector Origin, FHitResult HitInfo, AController* InstigatedBy, AActor* DamageCauser)
+{
+	ReceiveDamageGeneric(Damage, FVector::ZeroVector, InstigatedBy);
+}
+
+void ABlasterCharacter::ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy)
+{
+	if (bEliminated)
+	{
+		return;
+	}
+
 	// Called only on server
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUD();
 	PlayHitReactMontage();
 
 	// Will be replicated on client and calls OnRep_HitLocation
-	LastHitLocation = HitLocation;
-	OnRep_LastHitLocation(); // execute client code on server too.
+	if (HitLocation != FVector::ZeroVector)
+	{
+		LastHitLocation = HitLocation;
+		OnRep_LastHitLocation(); // execute client code on server too.
+	}
 
 	if (Health == 0.f)
 	{
@@ -586,6 +647,19 @@ void ABlasterCharacter::FireButtonReleased()
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);
+	}
+}
+
+void ABlasterCharacter::ThrowGrenadeButtonPressed()
+{
+	if (bDisableGameplay)
+	{
+		return;
+	}
+
+	if (Combat)
+	{
+		Combat->ThrowGrenade();
 	}
 }
 

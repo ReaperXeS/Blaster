@@ -55,6 +55,24 @@ void ABlasterPlayerController::SetHUDCarriedWeaponType(const EWeaponType WeaponT
 		case EWeaponType::EWT_AssaultRifle:
 			WeaponTypeString = "Assault Rifle";
 			break;
+		case EWeaponType::EWT_RocketLauncher:
+			WeaponTypeString = "Rocket Launcher";
+			break;
+		case EWeaponType::EWT_Pistol:
+			WeaponTypeString = "Pistol";
+			break;
+		case EWeaponType::EWT_Shotgun:
+			WeaponTypeString = "Shotgun";
+			break;
+		case EWeaponType::EWT_SubMachineGun:
+			WeaponTypeString = "Sub Machine Gun";
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			WeaponTypeString = "Sniper Rifle";
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			WeaponTypeString = "Grenade Launcher";
+			break;
 		default:
 			WeaponTypeString = "Patate";
 			break;
@@ -96,6 +114,14 @@ void ABlasterPlayerController::SetHUDAnnouncementCountdown(const float Countdown
 			const FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
 			UpdateTextBlockText(GetBlasterHUD()->Announcement->WarmupTime, CountdownText);
 		}
+	}
+}
+
+void ABlasterPlayerController::SetHUDGrenades(const int32 Grenades)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->GrenadeText, Grenades);
 	}
 }
 
@@ -242,6 +268,10 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if (const ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(InPawn))
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		if (BlasterCharacter->GetCombatComponent())
+		{
+			SetHUDGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());
+		}
 	}
 	HideDeathMessage();
 }
@@ -341,10 +371,14 @@ void ABlasterPlayerController::OnRep_MatchState()
 
 void ABlasterPlayerController::HandleMatchHasStarted()
 {
-	GetBlasterHUD()->AddCharacterOverlay();
-	if (GetBlasterHUD()->Announcement)
+	if (GetBlasterHUD())
 	{
-		GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		GetBlasterHUD()->AddCharacterOverlay();
+
+		if (GetBlasterHUD()->Announcement)
+		{
+			GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 

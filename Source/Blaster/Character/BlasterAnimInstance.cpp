@@ -78,15 +78,39 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		}
 	}
 
-	bUseFABRIK = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading;
-	bUseAimOffsets = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
-	bTransformRightHand = BlasterCharacter->GetCombatState() != ECombatState::ECS_Reloading && !BlasterCharacter->GetDisableGameplay();
+	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+	bUseAimOffsets = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
+	bTransformRightHand = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
 }
 
-void UBlasterAnimInstance::FinishReloading()
+void UBlasterAnimInstance::FinishReloading() const
 {
 	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
 	{
 		BlasterCharacter->GetCombatComponent()->FinishReloading();
+	}
+}
+
+void UBlasterAnimInstance::ShotgunShellReload() const
+{
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->GetCombatComponent()->ShotgunShellReload();
+	}
+}
+
+void UBlasterAnimInstance::ThrowGrenadeFinished() const
+{
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->GetCombatComponent()->ThrowGrenadeFinished();
+	}
+}
+
+void UBlasterAnimInstance::LaunchGrenade() const
+{
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->GetCombatComponent()->LaunchGrenade();
 	}
 }

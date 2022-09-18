@@ -9,8 +9,6 @@
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "CombatComponent.generated.h"
 
-#define TRACE_LENGTH 80000.f;
-
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class BLASTER_API UCombatComponent : public UActorComponent
 {
@@ -27,9 +25,35 @@ public:
 	void EquipWeapon(class AWeapon* aWeaponToEquip);
 	void Reload();
 	void UpdateAmmoValues();
+	void UpdateShotgunAmmoValues();
+	void UpdateHUDGrenades();
 	void FireButtonPressed(bool aIsPressed);
+
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd();
+	void ThrowGrenade();
+
+	void ThrowGrenadeFinished();
+	void LaunchGrenade() const;
+	UFUNCTION(Server, Reliable)
+	void ServerLaunchGrenade(const FVector_NetQuantize& Target) const;
+	void ShowGrenade(const bool bShow) const;
+
+	UFUNCTION(Server, Reliable)
+	void ServerThrowGrenade();
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GrenadeClass;
 protected:
 	virtual void BeginPlay() override;
+	void DropEquippedWeapon() const;
+	void AttachActorToLeftHand(AActor* ActorToAttached) const;
+	void AttachActorToRightHand(AActor* ActorToAttached) const;
+	void UpdateCarriedAmmo(const int32 Amount);
+	void PlayEquipWeaponSound() const;
+	void ReloadIfEmpty();
+
 
 	void SetAiming(bool aIsAiming);
 	UFUNCTION(Server, Reliable)
@@ -134,6 +158,17 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 3;
+
+	UFUNCTION()
+	void OnRep_Grenades();
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	int32 MaxGrenades = 4;
 public:
 	void FinishReloading();
+
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };

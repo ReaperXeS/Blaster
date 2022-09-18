@@ -26,6 +26,7 @@ public:
 	void PlayReloadMontage() const;
 	// ReSharper disable once IdentifierTypo
 	void PlayElimMontage() const;
+	void PlayThrowGrenadeMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
 
@@ -38,6 +39,9 @@ public:
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay = false;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -59,10 +63,16 @@ protected:
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
+	void ThrowGrenadeButtonPressed();
 
 	void PlayHitReactMontage() const;
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
+
+	UFUNCTION()
+	void ReceiveDamageRadial(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, FVector Origin, FHitResult HitInfo, class AController* InstigatedBy, AActor* DamageCauser);
+
+	void ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy);
 
 	void UpdateHUD();
 
@@ -114,6 +124,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	// ReSharper disable once IdentifierTypo
 	UAnimMontage* ElimMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ThrowGrenadeMontage;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactPlayerParticles;
@@ -202,6 +215,12 @@ private:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
+	/*****************************************/
+	/* 	Grenade					*/
+	/*****************************************/
+	UPROPERTY(EditAnywhere, Category = "Grenade")
+	UStaticMeshComponent* AttachedGrenade;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -222,4 +241,6 @@ public:
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	ECombatState GetCombatState();
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 };
