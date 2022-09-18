@@ -26,6 +26,7 @@ public:
 	void Reload();
 	void UpdateAmmoValues();
 	void UpdateShotgunAmmoValues();
+	void UpdateHUDGrenades();
 	void FireButtonPressed(bool aIsPressed);
 
 	void ShotgunShellReload();
@@ -157,6 +158,17 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades)
+	int32 Grenades = 3;
+
+	UFUNCTION()
+	void OnRep_Grenades();
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	int32 MaxGrenades = 4;
 public:
 	void FinishReloading();
+
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };

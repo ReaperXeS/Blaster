@@ -31,6 +31,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); // Only relevant to owning client since it will be shown on HUD
 	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME(UCombatComponent, Grenades);
 }
 
 void UCombatComponent::BeginPlay()
@@ -190,6 +191,7 @@ void UCombatComponent::UpdateShotgunAmmoValues()
 	}
 }
 
+
 void UCombatComponent::ServerReload_Implementation()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr)
@@ -224,6 +226,11 @@ void UCombatComponent::OnRep_CombatState()
 	default:
 		break;
 	}
+}
+
+void UCombatComponent::OnRep_Grenades()
+{
+	UpdateHUDGrenades();
 }
 
 void UCombatComponent::HandleReload() const
@@ -499,7 +506,7 @@ void UCombatComponent::JumpToShotgunEnd()
 
 void UCombatComponent::ThrowGrenade()
 {
-	if (CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr)
+	if (CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr || Grenades == 0)
 	{
 		return;
 	}
@@ -514,6 +521,11 @@ void UCombatComponent::ThrowGrenade()
 		if (!Character->HasAuthority())
 		{
 			ServerThrowGrenade();
+		}
+		else
+		{
+			Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+			UpdateHUDGrenades();
 		}
 	}
 }
@@ -552,12 +564,30 @@ void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuant
 
 void UCombatComponent::ServerThrowGrenade_Implementation()
 {
+	if (Grenades == 0)
+	{
+		return;
+	}
+
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character)
 	{
 		ShowGrenade(true);
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon);
+	}
+
+	Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+	UpdateHUDGrenades();
+}
+
+
+void UCombatComponent::UpdateHUDGrenades()
+{
+	Controller = Controller == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : Controller;
+	if (Controller)
+	{
+		Controller->SetHUDGrenades(Grenades);
 	}
 }
 

@@ -117,6 +117,14 @@ void ABlasterPlayerController::SetHUDAnnouncementCountdown(const float Countdown
 	}
 }
 
+void ABlasterPlayerController::SetHUDGrenades(const int32 Grenades)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->GrenadeText, Grenades);
+	}
+}
+
 void ABlasterPlayerController::SetHUDDefeats(const int32 Defeats)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
@@ -260,6 +268,10 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if (const ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(InPawn))
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		if (BlasterCharacter->GetCombatComponent())
+		{
+			SetHUDGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());
+		}
 	}
 	HideDeathMessage();
 }

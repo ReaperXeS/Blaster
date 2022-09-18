@@ -22,6 +22,7 @@ public:
 	void SetHUDCarriedWeaponType(EWeaponType WeaponType);
 	void SetHUDMatchCountdown(const float CountdownTime);
 	void SetHUDAnnouncementCountdown(const float CountdownTime);
+	void SetHUDGrenades(const int32 Grenades);
 
 	void SetHUDDefeats(int32 Defeats);
 	void SetHUDHealth(float Health, float MaxHealth);

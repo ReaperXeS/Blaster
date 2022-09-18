@@ -147,6 +147,7 @@ void ABlasterCharacter::UpdateHUD()
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 		BlasterPlayerController->HideDeathMessage();
+		BlasterPlayerController->SetHUDGrenades(GetCombatComponent()->GetGrenades());
 	}
 }
 
@@ -359,6 +360,11 @@ void ABlasterCharacter::ReceiveDamageRadial(AActor* DamagedActor, float Damage, 
 
 void ABlasterCharacter::ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy)
 {
+	if (bEliminated)
+	{
+		return;
+	}
+
 	// Called only on server
 	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
 	UpdateHUD();
