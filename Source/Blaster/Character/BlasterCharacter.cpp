@@ -168,6 +168,15 @@ void ABlasterCharacter::PollInit()
 	}
 }
 
+void ABlasterCharacter::Heal(const float HealAmount)
+{
+	if (Health < MaxHealth)
+	{
+		Health = FMath::Clamp(Health + HealAmount, 0.f, MaxHealth);
+		UpdateHUD();
+	}
+}
+
 void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
@@ -719,10 +728,14 @@ void ABlasterCharacter::HideCameraIfCharacterClose() const
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(const float LastHealth)
 {
 	UpdateHUD();
-	PlayHitReactMontage();
+
+	if (Health < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
 }
 
 void ABlasterCharacter::OnRep_LastHitLocation() const
