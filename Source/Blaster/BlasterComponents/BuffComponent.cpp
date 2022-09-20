@@ -2,8 +2,8 @@
 
 
 #include "BuffComponent.h"
-
 #include "Blaster/Character/BlasterCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UBuffComponent::UBuffComponent()
 {
@@ -22,7 +22,32 @@ void UBuffComponent::Heal(const float HealAmount, const float HealingTime)
 	AmountToHeal += HealAmount;
 }
 
-void UBuffComponent::HealOverTime(float DeltaTime)
+void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffDuration)
+{
+	if (Character == nullptr)
+	{
+		return;
+	}
+
+	Character->GetWorldTimerManager().SetTimer(SpeedBuffTimer, this, &UBuffComponent::ResetSpeeds, BuffDuration);
+
+	if (Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BuffBaseSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BuffCrouchSpeed;
+	}
+	MulticastSpeedBuff(BuffBaseSpeed, BuffCrouchSpeed);
+}
+
+void UBuffComponent::SetInitialSpeeds(const float BaseSpeed, const float CrouchSpeed)
+{
+	InitialBaseSpeed = BaseSpeed;
+	InitialCrouchSpeed = CrouchSpeed;
+
+	MulticastSpeedBuff(InitialBaseSpeed, InitialCrouchSpeed);
+}
+
+void UBuffComponent::HealOverTime(const float DeltaTime)
 {
 	if (bHealing && Character && !Character->IsEliminated())
 	{
@@ -42,4 +67,22 @@ void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	HealOverTime(DeltaTime);
+}
+
+void UBuffComponent::ResetSpeeds() const
+{
+	if (Character && Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+	}
+}
+
+void UBuffComponent::MulticastSpeedBuff_Implementation(const float BuffBaseSpeed, const float BuffCrouchSpeed)
+{
+	if (Character && Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BuffBaseSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BuffCrouchSpeed;
+	}
 }
