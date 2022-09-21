@@ -165,6 +165,19 @@ private:
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
 
+	/**
+	 * Player Shield
+	 */
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	// Current Health of the Character
+	UPROPERTY(ReplicatedUsing=OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	float Shield = 100.f;
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
+
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 
@@ -243,6 +256,8 @@ public:
 
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	ECombatState GetCombatState();
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }

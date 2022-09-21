@@ -71,6 +71,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
 	DOREPLIFETIME(ABlasterCharacter, LastHitLocation);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
@@ -150,6 +151,7 @@ void ABlasterCharacter::UpdateHUD()
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
 		BlasterPlayerController->HideDeathMessage();
 		BlasterPlayerController->SetHUDGrenades(GetCombatComponent()->GetGrenades());
 	}
@@ -738,6 +740,11 @@ void ABlasterCharacter::OnRep_Health(const float LastHealth)
 	{
 		PlayHitReactMontage();
 	}
+}
+
+void ABlasterCharacter::OnRep_Shield(const float LastShield)
+{
+	UpdateHUD();
 }
 
 void ABlasterCharacter::OnRep_LastHitLocation() const
