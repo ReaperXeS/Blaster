@@ -22,7 +22,7 @@ void UBuffComponent::Heal(const float HealAmount, const float HealingTime)
 	AmountToHeal += HealAmount;
 }
 
-void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffDuration)
+void UBuffComponent::BuffSpeed(const float BuffBaseSpeed, const float BuffCrouchSpeed, const float BuffDuration)
 {
 	if (Character == nullptr)
 	{
@@ -39,12 +39,33 @@ void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float
 	MulticastSpeedBuff(BuffBaseSpeed, BuffCrouchSpeed);
 }
 
+void UBuffComponent::BuffJump(const float BuffJumpVelocity, const float BuffDuration)
+{
+	if (Character == nullptr)
+	{
+		return;
+	}
+
+	Character->GetWorldTimerManager().SetTimer(JumpBuffTimer, this, &UBuffComponent::ResetJump, BuffDuration);
+
+	if (Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->JumpZVelocity = BuffJumpVelocity;
+	}
+	MulticastJumpBuff(BuffJumpVelocity);
+}
+
 void UBuffComponent::SetInitialSpeeds(const float BaseSpeed, const float CrouchSpeed)
 {
 	InitialBaseSpeed = BaseSpeed;
 	InitialCrouchSpeed = CrouchSpeed;
 
 	MulticastSpeedBuff(InitialBaseSpeed, InitialCrouchSpeed);
+}
+
+void UBuffComponent::SetInitialJumpVelocity(const float JumpVelocity)
+{
+	InitialJumpVelocity = JumpVelocity;
 }
 
 void UBuffComponent::HealOverTime(const float DeltaTime)
@@ -75,6 +96,22 @@ void UBuffComponent::ResetSpeeds() const
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
 		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+	}
+}
+
+void UBuffComponent::ResetJump() const
+{
+	if (Character && Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->JumpZVelocity = InitialJumpVelocity;
+	}
+}
+
+void UBuffComponent::MulticastJumpBuff_Implementation(const float JumpVelocity)
+{
+	if (Character && Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->JumpZVelocity = JumpVelocity;
 	}
 }
 
