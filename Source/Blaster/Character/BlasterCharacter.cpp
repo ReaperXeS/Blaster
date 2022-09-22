@@ -387,8 +387,22 @@ void ABlasterCharacter::ReceiveDamageGeneric(const float Damage, const FVector H
 		return;
 	}
 
-	// Called only on server
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	float DamageToHealth = Damage;
+	if (Shield > 0.f)
+	{
+		if (Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			DamageToHealth = Damage - Shield;
+			Shield = 0.f;
+		}
+	}
+
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
 	UpdateHUD();
 	PlayHitReactMontage();
 
