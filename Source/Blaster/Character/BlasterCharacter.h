@@ -44,6 +44,7 @@ public:
 	void ShowSniperScopeWidget(bool bShowScope);
 
 	void Heal(float HealAmount);
+	void ReplenishShield(const float ShieldAmount);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -172,8 +173,8 @@ private:
 	float MaxShield = 100.f;
 
 	// Current Health of the Character
-	UPROPERTY(ReplicatedUsing=OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
-	float Shield = 100.f;
+	UPROPERTY(ReplicatedUsing=OnRep_Shield, EditAnywhere, Category = "Player Stats")
+	float Shield = 0.f;
 
 	UFUNCTION()
 	void OnRep_Shield(float LastShield);

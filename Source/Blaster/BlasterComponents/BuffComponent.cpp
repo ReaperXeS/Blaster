@@ -22,6 +22,14 @@ void UBuffComponent::Heal(const float HealAmount, const float HealingTime)
 	AmountToHeal += HealAmount;
 }
 
+void UBuffComponent::ReplenishShield(const float ShieldAmount, const float ReplenishTime)
+{
+	bReplenishingShield = true;
+	ShieldReplenishRate = ShieldAmount / ReplenishTime;
+	ShieldReplenishAmount += ShieldAmount;
+	MaxShieldReplenishAmount += ShieldAmount;
+}
+
 void UBuffComponent::BuffSpeed(const float BuffBaseSpeed, const float BuffCrouchSpeed, const float BuffDuration)
 {
 	if (Character == nullptr)
@@ -83,11 +91,32 @@ void UBuffComponent::HealOverTime(const float DeltaTime)
 	}
 }
 
+void UBuffComponent::ReplenishShieldOverTime(float DeltaTime)
+{
+	if (bReplenishingShield && Character && !Character->IsEliminated())
+	{
+		// TODO: Shield replenish too much
+		const float ReplenishThisFrame = ShieldReplenishRate * DeltaTime;
+		if (ShieldReplenishAmount - ReplenishThisFrame <= 0.f)
+		{
+			Character->ReplenishShield(FMath::Abs(ShieldReplenishAmount - ReplenishThisFrame));
+			bReplenishingShield = false;
+			ShieldReplenishAmount = 0;
+		}
+		else
+		{
+			Character->ReplenishShield(ReplenishThisFrame);
+			ShieldReplenishAmount -= ReplenishThisFrame;
+		}
+	}
+}
+
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	HealOverTime(DeltaTime);
+	ReplenishShieldOverTime(DeltaTime);
 }
 
 void UBuffComponent::ResetSpeeds() const

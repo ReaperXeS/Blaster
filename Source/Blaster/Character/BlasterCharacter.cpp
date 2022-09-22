@@ -179,6 +179,15 @@ void ABlasterCharacter::Heal(const float HealAmount)
 	}
 }
 
+void ABlasterCharacter::ReplenishShield(const float ShieldAmount)
+{
+	if (Shield < MaxShield)
+	{
+		Shield = FMath::Clamp(Shield + ShieldAmount, 0.f, MaxShield);
+		UpdateHUD();
+	}
+}
+
 void ABlasterCharacter::Destroyed()
 {
 	Super::Destroyed();
