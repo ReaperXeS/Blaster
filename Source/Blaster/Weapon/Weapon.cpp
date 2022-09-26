@@ -136,7 +136,6 @@ void AWeapon::HandleUpdateWeaponState() const
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 		}
-		EnableCustomDepth(false);
 		break;
 	case EWeaponState::EWS_Dropped:
 		if (HasAuthority())
@@ -234,7 +233,10 @@ void AWeapon::SetOwner(AActor* NewOwner)
 	if (BlasterOwnerCharacter)
 	{
 		BlasterOwnerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
-		SetHUDAmmo();
+		if (BlasterOwnerCharacter->GetEquippedWeapon() && BlasterOwnerCharacter->GetEquippedWeapon() == this)
+		{
+			SetHUDAmmo();
+		}
 	}
 	else
 	{

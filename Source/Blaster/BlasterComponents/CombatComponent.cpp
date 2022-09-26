@@ -28,6 +28,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); // Only relevant to owning client since it will be shown on HUD
 	DOREPLIFETIME(UCombatComponent, CombatState);
@@ -94,6 +95,14 @@ void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttached) const
 	}
 }
 
+void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttached) const
+{
+	if (const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket")); Character && Character->GetMesh() && BackpackSocket && ActorToAttached)
+	{
+		BackpackSocket->AttachActor(ActorToAttached, Character->GetMesh());
+	}
+}
+
 void UCombatComponent::UpdateCarriedAmmo(const int32 AmountToAdd)
 {
 	if (EquippedWeapon == nullptr)
@@ -116,11 +125,11 @@ void UCombatComponent::UpdateCarriedAmmo(const int32 AmountToAdd)
 	EquippedWeapon->AddAmmo(AmountToAdd);
 }
 
-void UCombatComponent::PlayEquipWeaponSound() const
+void UCombatComponent::PlayEquipWeaponSound(const AWeapon* WeaponToEquip) const
 {
-	if (EquippedWeapon && EquippedWeapon->EquipSound)
+	if (WeaponToEquip && WeaponToEquip->EquipSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+		UGameplayStatics::PlaySoundAtLocation(this, WeaponToEquip->EquipSound, Character->GetActorLocation());
 	}
 }
 
@@ -140,9 +149,9 @@ void UCombatComponent::ShowGrenade(const bool bShow) const
 	}
 }
 
-void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
+void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
-	if (Character == nullptr || aWeaponToEquip == nullptr)
+	if (Character == nullptr || WeaponToEquip == nullptr)
 	{
 		return;
 	}
@@ -152,9 +161,45 @@ void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 		return;
 	}
 
-	DropEquippedWeapon();
+	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+	{
+		EquipSecondaryWeapon(WeaponToEquip);
+	}
+	else
+	{
+		EquipPrimaryWeapon(WeaponToEquip);
+	}
 
-	EquippedWeapon = aWeaponToEquip;
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
+}
+
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr)
+	{
+		return;
+	}
+	SecondaryWeapon = WeaponToEquip;
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToBackpack(WeaponToEquip);
+	SecondaryWeapon->SetOwner(Character);
+	PlayEquipWeaponSound(SecondaryWeapon);
+	if (SecondaryWeapon->GetWeaponMesh())
+	{
+		SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+	}
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr)
+	{
+		return;
+	}
+	DropEquippedWeapon();
+	EquippedWeapon = WeaponToEquip;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	AttachActorToRightHand(EquippedWeapon);
 
@@ -162,11 +207,9 @@ void UCombatComponent::EquipWeapon(AWeapon* aWeaponToEquip)
 	EquippedWeapon->SetHUDAmmo();
 
 	UpdateCarriedAmmo(0);
-	PlayEquipWeaponSound();
+	PlayEquipWeaponSound(EquippedWeapon);
 	ReloadIfEmpty();
-
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
+	EquippedWeapon->EnableCustomDepth(false);
 }
 
 void UCombatComponent::Reload()
@@ -296,7 +339,23 @@ void UCombatComponent::OnRep_EquippedWeapon() const
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
 
-		PlayEquipWeaponSound();
+		PlayEquipWeaponSound(EquippedWeapon);
+		EquippedWeapon->EnableCustomDepth(false);
+	}
+}
+
+void UCombatComponent::OnRep_SecondaryWeapon() const
+{
+	if (SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachActorToBackpack(SecondaryWeapon);
+		PlayEquipWeaponSound(SecondaryWeapon);
+		if (SecondaryWeapon->GetWeaponMesh())
+		{
+			SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+			SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+		}
 	}
 }
 

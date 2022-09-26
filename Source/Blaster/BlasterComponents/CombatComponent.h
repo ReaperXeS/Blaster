@@ -22,7 +22,7 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void EquipWeapon(class AWeapon* aWeaponToEquip);
+	void EquipWeapon(class AWeapon* WeaponToEquip);
 	void Reload();
 	void UpdateAmmoValues();
 	void UpdateShotgunAmmoValues();
@@ -52,8 +52,9 @@ protected:
 	void DropEquippedWeapon() const;
 	void AttachActorToLeftHand(AActor* ActorToAttached) const;
 	void AttachActorToRightHand(AActor* ActorToAttached) const;
+	void AttachActorToBackpack(AActor* ActorToAttached) const;
 	void UpdateCarriedAmmo(const int32 AmountToAdd);
-	void PlayEquipWeaponSound() const;
+	void PlayEquipWeaponSound(const AWeapon* WeaponToEquip) const;
 	void ReloadIfEmpty();
 
 
@@ -63,6 +64,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon() const;
+
+	UFUNCTION()
+	void OnRep_SecondaryWeapon() const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -81,6 +85,9 @@ protected:
 	void HandleReload() const;
 
 	int32 AmountToReload() const;
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character;
@@ -91,6 +98,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
