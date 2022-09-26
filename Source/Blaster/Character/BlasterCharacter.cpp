@@ -88,7 +88,14 @@ void ABlasterCharacter::EliminationServer()
 {
 	if (Combat && Combat->EquippedWeapon)
 	{
-		Combat->EquippedWeapon->Drop();
+		if (Combat->EquippedWeapon->bDestroyWeapon)
+		{
+			Combat->EquippedWeapon->Destroy();
+		}
+		else
+		{
+			Combat->EquippedWeapon->Drop();
+		}
 	}
 	MulticastElimination();
 	GetWorldTimerManager().SetTimer(EliminationTimer, this, &ABlasterCharacter::EliminationTimerFinished, EliminationDelay);
@@ -152,8 +159,28 @@ void ABlasterCharacter::UpdateHUD()
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
 		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+		if (Combat)
+		{
+			BlasterPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+			BlasterPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon ? Combat->EquippedWeapon->GetAmmo() : 0);
+			BlasterPlayerController->SetHUDGrenades(Combat->GetGrenades());
+		}
 		BlasterPlayerController->HideDeathMessage();
-		BlasterPlayerController->SetHUDGrenades(GetCombatComponent()->GetGrenades());
+	}
+}
+
+void ABlasterCharacter::SpawnDefaultWeapon() const
+{
+	// Return only if we are the server
+	UWorld* World = GetWorld();
+	if (const ABlasterGameMode* BlasterGameMode = World->GetAuthGameMode<ABlasterGameMode>(); World && BlasterGameMode && !bEliminated && DefaultWeaponClass)
+	{
+		// Spawn default weapon
+		if (AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass))
+		{
+			Combat->EquipWeapon(StartingWeapon);
+			StartingWeapon->bDestroyWeapon = true;
+		}
 	}
 }
 
@@ -208,6 +235,7 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SpawnDefaultWeapon();
 	UpdateHUD();
 	if (HasAuthority())
 	{
@@ -481,14 +509,7 @@ void ABlasterCharacter::EquipButtonPressed()
 
 	if (Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 

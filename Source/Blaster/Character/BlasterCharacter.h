@@ -78,6 +78,7 @@ protected:
 	void ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy);
 
 	void UpdateHUD();
+	void SpawnDefaultWeapon() const;
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
@@ -240,6 +241,12 @@ private:
 	/*****************************************/
 	UPROPERTY(EditAnywhere, Category = "Grenade")
 	UStaticMeshComponent* AttachedGrenade;
+
+	/*****************************************/
+	/* 	Default Weapon						*/
+	/*****************************************/
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
