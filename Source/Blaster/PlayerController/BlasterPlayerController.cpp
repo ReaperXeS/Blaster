@@ -148,6 +148,21 @@ void ABlasterPlayerController::SetHUDHealth(const float Health, const float MaxH
 	}
 }
 
+void ABlasterPlayerController::SetHUDShield(const float Shield, const float MaxShield)
+{
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay &&
+		GetBlasterHUD()->CharacterOverlay->ShieldBar &&
+		GetBlasterHUD()->CharacterOverlay->ShieldText)
+	{
+		const float ShieldPercent = Shield / MaxShield;
+		GetBlasterHUD()->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
+
+		const FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Shield), FMath::CeilToInt(MaxShield));
+		GetBlasterHUD()->CharacterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
+	}
+}
+
 void ABlasterPlayerController::SetHUDScore(const float Score)
 {
 	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay)
@@ -268,6 +283,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if (const ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(InPawn))
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		SetHUDShield(BlasterCharacter->GetShield(), BlasterCharacter->GetMaxShield());
 		if (BlasterCharacter->GetCombatComponent())
 		{
 			SetHUDGrenades(BlasterCharacter->GetCombatComponent()->GetGrenades());

@@ -12,6 +12,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BlasterAnimInstance.h"
 #include "Blaster/Blaster.h"
+#include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
@@ -44,6 +45,9 @@ ABlasterCharacter::ABlasterCharacter()
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true);
 
+	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("Buff"));
+	Buff->SetIsReplicated(true);
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -67,6 +71,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shield);
 	DOREPLIFETIME(ABlasterCharacter, LastHitLocation);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
@@ -79,11 +84,27 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
+{
+	if (Weapon)
+	{
+		if (Weapon->bDestroyWeapon)
+		{
+			Weapon->Destroy();
+		}
+		else
+		{
+			Weapon->Drop();
+		}
+	}
+}
+
 void ABlasterCharacter::EliminationServer()
 {
-	if (Combat && Combat->EquippedWeapon)
+	if (Combat)
 	{
-		Combat->EquippedWeapon->Drop();
+		DropOrDestroyWeapon(Combat->EquippedWeapon);
+		DropOrDestroyWeapon(Combat->SecondaryWeapon);
 	}
 	MulticastElimination();
 	GetWorldTimerManager().SetTimer(EliminationTimer, this, &ABlasterCharacter::EliminationTimerFinished, EliminationDelay);
@@ -146,8 +167,29 @@ void ABlasterCharacter::UpdateHUD()
 	if (BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+		BlasterPlayerController->SetHUDShield(Shield, MaxShield);
+		if (Combat)
+		{
+			BlasterPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo);
+			BlasterPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon ? Combat->EquippedWeapon->GetAmmo() : 0);
+			BlasterPlayerController->SetHUDGrenades(Combat->GetGrenades());
+		}
 		BlasterPlayerController->HideDeathMessage();
-		BlasterPlayerController->SetHUDGrenades(GetCombatComponent()->GetGrenades());
+	}
+}
+
+void ABlasterCharacter::SpawnDefaultWeapon() const
+{
+	// Return only if we are the server
+	UWorld* World = GetWorld();
+	if (const ABlasterGameMode* BlasterGameMode = World->GetAuthGameMode<ABlasterGameMode>(); World && BlasterGameMode && !bEliminated && DefaultWeaponClass)
+	{
+		// Spawn default weapon
+		if (AWeapon* StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass))
+		{
+			Combat->EquipWeapon(StartingWeapon);
+			StartingWeapon->bDestroyWeapon = true;
+		}
 	}
 }
 
@@ -161,6 +203,24 @@ void ABlasterCharacter::PollInit()
 			BlasterPlayerState->AddToDefeats(0); // Init Defeats
 			BlasterPlayerState->AddToScore(0.f); // Init Score
 		}
+	}
+}
+
+void ABlasterCharacter::Heal(const float HealAmount)
+{
+	if (Health < MaxHealth)
+	{
+		Health = FMath::Clamp(Health + HealAmount, 0.f, MaxHealth);
+		UpdateHUD();
+	}
+}
+
+void ABlasterCharacter::ReplenishShield(const float ShieldAmount)
+{
+	if (Shield < MaxShield)
+	{
+		Shield = FMath::Clamp(Shield + ShieldAmount, 0.f, MaxShield);
+		UpdateHUD();
 	}
 }
 
@@ -184,6 +244,7 @@ void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SpawnDefaultWeapon();
 	UpdateHUD();
 	if (HasAuthority())
 	{
@@ -255,6 +316,13 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (Combat)
 	{
 		Combat->Character = this;
+	}
+
+	if (Buff)
+	{
+		Buff->Character = this;
+		Buff->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
+		Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
 	}
 }
 
@@ -365,8 +433,22 @@ void ABlasterCharacter::ReceiveDamageGeneric(const float Damage, const FVector H
 		return;
 	}
 
-	// Called only on server
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	float DamageToHealth = Damage;
+	if (Shield > 0.f)
+	{
+		if (Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			DamageToHealth = Damage - Shield;
+			Shield = 0.f;
+		}
+	}
+
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
 	UpdateHUD();
 	PlayHitReactMontage();
 
@@ -436,14 +518,7 @@ void ABlasterCharacter::EquipButtonPressed()
 
 	if (Combat)
 	{
-		if (HasAuthority())
-		{
-			Combat->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquipButtonPressed();
-		}
+		ServerEquipButtonPressed();
 	}
 }
 
@@ -451,7 +526,14 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 {
 	if (Combat)
 	{
-		Combat->EquipWeapon(OverlappingWeapon);
+		if (OverlappingWeapon)
+		{
+			Combat->EquipWeapon(OverlappingWeapon);
+		}
+		else if (Combat->ShouldSwapWeapons())
+		{
+			Combat->SwapWeapons();
+		}
 	}
 }
 
@@ -710,10 +792,19 @@ void ABlasterCharacter::HideCameraIfCharacterClose() const
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(const float LastHealth)
 {
 	UpdateHUD();
-	PlayHitReactMontage();
+
+	if (Health < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
+}
+
+void ABlasterCharacter::OnRep_Shield(const float LastShield)
+{
+	UpdateHUD();
 }
 
 void ABlasterCharacter::OnRep_LastHitLocation() const

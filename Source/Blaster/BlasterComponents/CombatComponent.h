@@ -22,7 +22,8 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void EquipWeapon(class AWeapon* aWeaponToEquip);
+	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapons();
 	void Reload();
 	void UpdateAmmoValues();
 	void UpdateShotgunAmmoValues();
@@ -45,13 +46,16 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> GrenadeClass;
+
+	void PickupAmmo(const EWeaponType WeaponType, int32 AmmoAmount);
 protected:
 	virtual void BeginPlay() override;
 	void DropEquippedWeapon() const;
 	void AttachActorToLeftHand(AActor* ActorToAttached) const;
 	void AttachActorToRightHand(AActor* ActorToAttached) const;
-	void UpdateCarriedAmmo(const int32 Amount);
-	void PlayEquipWeaponSound() const;
+	void AttachActorToBackpack(AActor* ActorToAttached) const;
+	void UpdateCarriedAmmo(const int32 AmountToAdd);
+	void PlayEquipWeaponSound(const AWeapon* WeaponToEquip) const;
 	void ReloadIfEmpty();
 
 
@@ -61,6 +65,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon() const;
+
+	UFUNCTION()
+	void OnRep_SecondaryWeapon() const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -79,6 +86,9 @@ protected:
 	void HandleReload() const;
 
 	int32 AmountToReload() const;
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 private:
 	UPROPERTY()
 	class ABlasterCharacter* Character;
@@ -89,6 +99,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -153,6 +166,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 500;
+
 	UPROPERTY(ReplicatedUsing=OnRep_CombatState)
 	ECombatState CombatState = ECombatState::ECS_Unoccupied;
 
@@ -171,4 +187,5 @@ public:
 	void FinishReloading();
 
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+	bool ShouldSwapWeapons() const;
 };

@@ -29,6 +29,7 @@ public:
 	void PlayThrowGrenadeMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
+	void DropOrDestroyWeapon(class AWeapon* Weapon);
 
 	void EliminationServer();
 
@@ -42,6 +43,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
+
+	void Heal(float HealAmount);
+	void ReplenishShield(const float ShieldAmount);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -75,6 +79,7 @@ protected:
 	void ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy);
 
 	void UpdateHUD();
+	void SpawnDefaultWeapon() const;
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
@@ -96,6 +101,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* Combat;
+
+	UPROPERTY(VisibleAnywhere)
+	class UBuffComponent* Buff;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -158,7 +166,20 @@ private:
 	float Health = 100.f;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
+
+	/**
+	 * Player Shield
+	 */
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	// Current Health of the Character
+	UPROPERTY(ReplicatedUsing=OnRep_Shield, EditAnywhere, Category = "Player Stats")
+	float Shield = 0.f;
+
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
@@ -221,6 +242,12 @@ private:
 	/*****************************************/
 	UPROPERTY(EditAnywhere, Category = "Grenade")
 	UStaticMeshComponent* AttachedGrenade;
+
+	/*****************************************/
+	/* 	Default Weapon						*/
+	/*****************************************/
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -238,9 +265,12 @@ public:
 
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
 	FORCEINLINE class UCombatComponent* GetCombatComponent() const { return Combat; }
 	ECombatState GetCombatState();
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UBuffComponent* GetBuffComponent() const { return Buff; }
 };
