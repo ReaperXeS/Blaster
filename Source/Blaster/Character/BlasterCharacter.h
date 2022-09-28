@@ -29,6 +29,7 @@ public:
 	void PlayThrowGrenadeMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
+	void DropOrDestroyWeapon(class AWeapon* Weapon);
 
 	void EliminationServer();
 

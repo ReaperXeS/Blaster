@@ -84,18 +84,27 @@ void ABlasterCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.f;
 }
 
-void ABlasterCharacter::EliminationServer()
+void ABlasterCharacter::DropOrDestroyWeapon(AWeapon* Weapon)
 {
-	if (Combat && Combat->EquippedWeapon)
+	if (Weapon)
 	{
-		if (Combat->EquippedWeapon->bDestroyWeapon)
+		if (Weapon->bDestroyWeapon)
 		{
-			Combat->EquippedWeapon->Destroy();
+			Weapon->Destroy();
 		}
 		else
 		{
-			Combat->EquippedWeapon->Drop();
+			Weapon->Drop();
 		}
+	}
+}
+
+void ABlasterCharacter::EliminationServer()
+{
+	if (Combat)
+	{
+		DropOrDestroyWeapon(Combat->EquippedWeapon);
+		DropOrDestroyWeapon(Combat->SecondaryWeapon);
 	}
 	MulticastElimination();
 	GetWorldTimerManager().SetTimer(EliminationTimer, this, &ABlasterCharacter::EliminationTimerFinished, EliminationDelay);
