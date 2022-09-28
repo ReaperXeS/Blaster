@@ -174,6 +174,24 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;
 }
 
+void UCombatComponent::SwapWeapons()
+{
+	AWeapon* TempWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon;
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToRightHand(EquippedWeapon);
+	EquippedWeapon->SetHUDAmmo();
+
+	UpdateCarriedAmmo(0);
+	PlayEquipWeaponSound(EquippedWeapon);
+	ReloadIfEmpty();
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
+	AttachActorToBackpack(SecondaryWeapon);
+}
+
 void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr)
@@ -181,15 +199,10 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 		return;
 	}
 	SecondaryWeapon = WeaponToEquip;
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 	AttachActorToBackpack(WeaponToEquip);
 	SecondaryWeapon->SetOwner(Character);
 	PlayEquipWeaponSound(SecondaryWeapon);
-	if (SecondaryWeapon->GetWeaponMesh())
-	{
-		SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-		SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
-	}
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
@@ -209,7 +222,6 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	UpdateCarriedAmmo(0);
 	PlayEquipWeaponSound(EquippedWeapon);
 	ReloadIfEmpty();
-	EquippedWeapon->EnableCustomDepth(false);
 }
 
 void UCombatComponent::Reload()
@@ -329,6 +341,11 @@ void UCombatComponent::FinishReloading()
 	}
 }
 
+bool UCombatComponent::ShouldSwapWeapons() const
+{
+	return EquippedWeapon != nullptr && SecondaryWeapon != nullptr;
+}
+
 void UCombatComponent::OnRep_EquippedWeapon() const
 {
 	if (EquippedWeapon && Character)
@@ -341,6 +358,7 @@ void UCombatComponent::OnRep_EquippedWeapon() const
 
 		PlayEquipWeaponSound(EquippedWeapon);
 		EquippedWeapon->EnableCustomDepth(false);
+		EquippedWeapon->SetHUDAmmo();
 	}
 }
 
@@ -348,14 +366,9 @@ void UCombatComponent::OnRep_SecondaryWeapon() const
 {
 	if (SecondaryWeapon && Character)
 	{
-		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary);
 		AttachActorToBackpack(SecondaryWeapon);
 		PlayEquipWeaponSound(SecondaryWeapon);
-		if (SecondaryWeapon->GetWeaponMesh())
-		{
-			SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-			SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
-		}
 	}
 }
 

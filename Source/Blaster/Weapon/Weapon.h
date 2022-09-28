@@ -12,6 +12,7 @@ enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped"),
+	EWS_EquippedSecondary UMETA(DisplayName = "Equipped Secondary"),
 	EWS_Dropped UMETA(DisplayName = "Dropped"),
 	EWS_MAX UMETA(DisplayName = "Default Max")
 };
@@ -123,6 +124,9 @@ private:
 	UFUNCTION()
 	void OnRep_Ammo();
 	void HandleUpdateWeaponState() const;
+	void HandleWeaponStateEquipped() const;
+	void HandleWeaponStateEquippedSecondary() const;
+	void HandleWeaponStateDropped() const;
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity = 30;
