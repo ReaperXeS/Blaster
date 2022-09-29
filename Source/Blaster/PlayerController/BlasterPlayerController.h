@@ -29,6 +29,7 @@ public:
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
+	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	// Synced with server world clock
 	virtual float GetServerTime();
@@ -79,6 +80,8 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMiddleOfGame(FName StateOfMatch, float Warmup, float Match, float StartingTime, float Cooldown);
 
+	void HighPingWarning(const bool bShow);
+	bool HighPingWarningAnimationIsPlaying();
 public:
 private:
 	UPROPERTY()
@@ -99,4 +102,16 @@ private:
 
 	UFUNCTION()
 	void OnRep_MatchState();
+
+	float HighPingRunningTime = 0.f;
+	float HighPingAnimationRunningTime = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Network")
+	float HighPingDuration = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Network")
+	float CheckPingFrequency = 20.f;
+
+	UPROPERTY(EditAnywhere, Category = "Network")
+	float HighPingThreshold = 50.f;
 };
