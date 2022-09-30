@@ -142,13 +142,20 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ACasing> CasingClass;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo = 30;
 
-	void SpendRound();
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	void SpendRound();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(const int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(const int32 AmmoToAdd);
+
+	// The number of unprocessed server request for Ammo. Incremented by SpendRound() and decremented by ClientUpdateAmmo()
+	int32 SequenceAmmoRequest = 0;
+
 	void HandleUpdateWeaponState() const;
 	void HandleWeaponStateEquipped() const;
 	void HandleWeaponStateEquippedSecondary() const;

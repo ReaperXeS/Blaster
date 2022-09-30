@@ -99,7 +99,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
-	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -125,20 +124,55 @@ void AWeapon::SetEnablePhysics(const bool Enabled) const
 	WeaponMesh->SetCollisionEnabled(Enabled ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 }
 
+
 void AWeapon::SpendRound()
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity);
 	SetHUDAmmo();
+
+	// Sent Authoritative value to client
+	if (HasAuthority())
+	{
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		SequenceAmmoRequest++;
+	}
 }
 
-// ReSharper disable once CppMemberFunctionMayBeConst
-void AWeapon::OnRep_Ammo()
+void AWeapon::ClientUpdateAmmo_Implementation(const int32 ServerAmmo)
 {
+	if (HasAuthority())
+	{
+		return;
+	}
+
+	Ammo = ServerAmmo; // Sync with server
+	SequenceAmmoRequest--;
+	Ammo -= SequenceAmmoRequest;
+	SetHUDAmmo();
+}
+
+void AWeapon::AddAmmo(const int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+
+void AWeapon::ClientAddAmmo_Implementation(const int32 AmmoToAdd)
+{
+	if (HasAuthority())
+	{
+		return;
+	}
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	BlasterOwnerCharacter = BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
 	if (BlasterOwnerCharacter && BlasterOwnerCharacter->GetCombatComponent() && IsFull())
 	{
 		BlasterOwnerCharacter->GetCombatComponent()->JumpToShotgunEnd();
 	}
-	SetHUDAmmo();
 }
 
 void AWeapon::HandleUpdateWeaponState() const
@@ -261,10 +295,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			World->SpawnActor<ACasing>(CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
 		}
 	}
-	if (HasAuthority())
-	{
-		SpendRound();
-	}
+	SpendRound();
 }
 
 void AWeapon::Drop()
@@ -273,12 +304,6 @@ void AWeapon::Drop()
 	const FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
 	GetWeaponMesh()->DetachFromComponent(DetachRules);
 	SetOwner(nullptr);
-}
-
-void AWeapon::AddAmmo(const int32 AmmoToAdd)
-{
-	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
-	SetHUDAmmo();
 }
 
 void AWeapon::SetOwner(AActor* NewOwner)
