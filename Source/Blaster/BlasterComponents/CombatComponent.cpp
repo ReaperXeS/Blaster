@@ -210,6 +210,15 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	PlayEquipWeaponSound(SecondaryWeapon);
 }
 
+void UCombatComponent::OnRep_Aiming()
+{
+	// Make sure we are aiming if locally controlled 
+	if (Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimingButtonPressed;
+	}
+}
+
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 {
 	if (WeaponToEquip == nullptr)
@@ -548,6 +557,10 @@ void UCombatComponent::SetAiming(bool aIsAiming)
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bAiming);
+	}
+	if (Character->IsLocallyControlled())
+	{
+		bAimingButtonPressed = bAiming;
 	}
 }
 
