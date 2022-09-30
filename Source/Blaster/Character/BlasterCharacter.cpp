@@ -19,6 +19,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -63,6 +64,33 @@ ABlasterCharacter::ABlasterCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), TEXT("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	/************************************/
+	/* Hit Boxes for Server Side Rewind */
+	/************************************/
+	// CreateHitBox(head, FName("head"));
+	// head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
+	// head->SetupAttachment(GetMesh(), FName("head"));
+	// head->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	head = CreateHitBox(FName("head"));
+	pelvis = CreateHitBox(FName("pelvis"));
+	spine_02 = CreateHitBox(FName("spine_02"));
+	spine_03 = CreateHitBox(FName("spine_03"));
+	upperarm_l = CreateHitBox(FName("upperarm_l"));
+	upperarm_r = CreateHitBox(FName("upperarm_r"));
+	lowerarm_l = CreateHitBox(FName("lowerarm_l"));
+	lowerarm_r = CreateHitBox(FName("lowerarm_r"));
+	hand_l = CreateHitBox(FName("hand_l"));
+	hand_r = CreateHitBox(FName("hand_r"));
+	backpack = CreateHitBox(FName("backpack"));
+	blanket = CreateHitBox(FName("backpack"), FName("blanket"));
+	thigh_l = CreateHitBox(FName("thigh_l"));
+	thigh_r = CreateHitBox(FName("thigh_r"));
+	calf_l = CreateHitBox(FName("calf_l"));
+	calf_r = CreateHitBox(FName("calf_r"));
+	foot_l = CreateHitBox(FName("foot_l"));
+	foot_r = CreateHitBox(FName("foot_r"));
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -238,6 +266,19 @@ void ABlasterCharacter::Destroyed()
 	{
 		Combat->EquippedWeapon->Destroy();
 	}
+}
+
+UBoxComponent* ABlasterCharacter::CreateHitBox(FName SocketName)
+{
+	return CreateHitBox(SocketName, SocketName);
+}
+
+UBoxComponent* ABlasterCharacter::CreateHitBox(const FName SocketName, FName BoxName)
+{
+	UBoxComponent* HitBox = CreateDefaultSubobject<UBoxComponent>(BoxName);
+	HitBox->SetupAttachment(GetMesh(), SocketName);
+	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	return HitBox;
 }
 
 void ABlasterCharacter::BeginPlay()
