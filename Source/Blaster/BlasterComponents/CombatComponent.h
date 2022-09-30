@@ -153,6 +153,9 @@ private:
 
 	void StartFireTimer();
 	void Fire();
+	void FireProjectileWeapon();
+	void FireHitScanWeapon();
+	void FireShotgunWeapon();
 	void FireTimerFinished();
 
 	bool CanFire() const;
