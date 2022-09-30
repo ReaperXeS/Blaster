@@ -231,8 +231,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 
-	const auto AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName("AmmoEject"));
-	if (AmmoEjectSocket && CasingClass)
+	if (const auto AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName("AmmoEject")); AmmoEjectSocket && CasingClass)
 	{
 		const auto SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh());
 
@@ -241,7 +240,10 @@ void AWeapon::Fire(const FVector& HitTarget)
 			World->SpawnActor<ACasing>(CasingClass, SocketTransform.GetLocation(), SocketTransform.GetRotation().Rotator());
 		}
 	}
-	SpendRound();
+	if (HasAuthority())
+	{
+		SpendRound();
+	}
 }
 
 void AWeapon::Drop()

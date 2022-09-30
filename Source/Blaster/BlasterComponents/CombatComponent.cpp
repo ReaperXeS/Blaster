@@ -176,6 +176,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::SwapWeapons()
 {
+	if (CombatState != ECombatState::ECS_Unoccupied)
+	{
+		return;
+	}
 	AWeapon* TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon;
@@ -372,7 +376,7 @@ void UCombatComponent::OnRep_SecondaryWeapon() const
 	}
 }
 
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCombatComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -387,7 +391,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
-void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+void UCombatComponent::SetHUDCrosshairs(const float DeltaTime)
 {
 	if (Character == nullptr || Character->Controller == nullptr)
 	{
@@ -561,6 +565,7 @@ void UCombatComponent::Fire()
 	{
 		bCanFire = false;
 		ServerFire(HitTarget);
+		LocalFire(HitTarget);
 		StartFireTimer();
 	}
 }
@@ -725,6 +730,15 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 }
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	if (Character && Character->IsLocallyControlled() && !Character->HasAuthority())
+	{
+		return;
+	}
+	LocalFire(TraceHitTarget);
+}
+
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon && Character)
 	{
