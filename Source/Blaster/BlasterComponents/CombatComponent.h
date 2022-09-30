@@ -48,6 +48,7 @@ public:
 	TSubclassOf<class AProjectile> GrenadeClass;
 
 	void PickupAmmo(const EWeaponType WeaponType, int32 AmmoAmount);
+	bool bLocallyReloading = false;
 protected:
 	virtual void BeginPlay() override;
 	void DropEquippedWeapon() const;

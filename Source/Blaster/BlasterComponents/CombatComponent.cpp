@@ -240,9 +240,11 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull())
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon && !EquippedWeapon->IsFull() && !bLocallyReloading)
 	{
 		ServerReload();
+		HandleReload();
+		bLocallyReloading = true;
 	}
 }
 
@@ -282,7 +284,10 @@ void UCombatComponent::ServerReload_Implementation()
 		return;
 	}
 	CombatState = ECombatState::ECS_Reloading;
-	HandleReload();
+	if (!Character->IsLocallyControlled())
+	{
+		HandleReload();
+	}
 }
 
 void UCombatComponent::OnRep_CombatState()
@@ -290,7 +295,11 @@ void UCombatComponent::OnRep_CombatState()
 	switch (CombatState)
 	{
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		// Locally controlled character will call itself handle reload
+		if (Character && !Character->IsLocallyControlled())
+		{
+			HandleReload();
+		}
 		break;
 	case ECombatState::ECS_Unoccupied:
 		if (bFireButtonPressed)
@@ -343,6 +352,7 @@ int32 UCombatComponent::AmountToReload() const
 
 void UCombatComponent::FinishReloading()
 {
+	bLocallyReloading = false;
 	if (Character && Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -510,7 +520,7 @@ void UCombatComponent::FireTimerFinished()
 
 bool UCombatComponent::CanFire() const
 {
-	if (bCanFire && EquippedWeapon && !EquippedWeapon->IsEmpty())
+	if (bCanFire && EquippedWeapon && !EquippedWeapon->IsEmpty() && !bLocallyReloading)
 	{
 		// Shotgun can interrupt reload to fire.
 		if (CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
