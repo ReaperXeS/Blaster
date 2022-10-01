@@ -44,11 +44,13 @@ public:
 	friend class ABlasterCharacter;
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void ShowFramePackage(FFramePackage& Package, FColor Color) const;
+	void ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime);
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package) const;
-	void ShowFramePackage(FFramePackage& Package, FColor Color) const;
-	void ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime);
+	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, const float& HitTime) const;
+	
 
 	ABlasterCharacter* GetCharacter() const;
 private:
