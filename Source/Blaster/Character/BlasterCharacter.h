@@ -103,6 +103,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* foot_r;
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;
 protected:
 	UBoxComponent* CreateHitBox(FName SocketName);
 	UBoxComponent* CreateHitBox(FName SocketName, FName HitBoxName);
@@ -159,11 +162,17 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon) const;
 
+	/********************************************/
+	/* Blaster Components						*/
+	/********************************************/
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* Combat;
 
 	UPROPERTY(VisibleAnywhere)
 	class UBuffComponent* Buff;
+
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensation;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();

@@ -13,6 +13,7 @@
 #include "BlasterAnimInstance.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
@@ -49,6 +50,8 @@ ABlasterCharacter::ABlasterCharacter()
 	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("Buff"));
 	Buff->SetIsReplicated(true);
 
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -68,10 +71,6 @@ ABlasterCharacter::ABlasterCharacter()
 	/************************************/
 	/* Hit Boxes for Server Side Rewind */
 	/************************************/
-	// CreateHitBox(head, FName("head"));
-	// head = CreateDefaultSubobject<UBoxComponent>(TEXT("head"));
-	// head->SetupAttachment(GetMesh(), FName("head"));
-	// head->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	head = CreateHitBox(FName("head"));
 	pelvis = CreateHitBox(FName("pelvis"));
@@ -278,6 +277,7 @@ UBoxComponent* ABlasterCharacter::CreateHitBox(const FName SocketName, FName Box
 	UBoxComponent* HitBox = CreateDefaultSubobject<UBoxComponent>(BoxName);
 	HitBox->SetupAttachment(GetMesh(), SocketName);
 	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitCollisionBoxes.Add(BoxName, HitBox);
 	return HitBox;
 }
 
@@ -364,6 +364,15 @@ void ABlasterCharacter::PostInitializeComponents()
 		Buff->Character = this;
 		Buff->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 		Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
+	}
+
+	if (LagCompensation)
+	{
+		LagCompensation->Character = this;
+		if (GetController())
+		{
+			LagCompensation->Controller = Cast<ABlasterPlayerController>(GetController());
+		}
 	}
 }
 
