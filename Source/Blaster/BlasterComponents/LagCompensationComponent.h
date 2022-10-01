@@ -48,6 +48,7 @@ protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package) const;
 	void ShowFramePackage(FFramePackage& Package, FColor Color) const;
+	void ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime);
 
 	ABlasterCharacter* GetCharacter() const;
 private:

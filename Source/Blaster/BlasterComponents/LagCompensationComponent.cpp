@@ -44,6 +44,69 @@ void ULagCompensationComponent::ShowFramePackage(FFramePackage& Package, const F
 	}
 }
 
+void ULagCompensationComponent::ServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime)
+{
+	if (HitCharacter == nullptr
+		|| HitCharacter->GetLagCompensationComponent() == nullptr
+		|| HitCharacter->GetLagCompensationComponent()->FrameHistory.GetHead() == nullptr
+		|| HitCharacter->GetLagCompensationComponent()->FrameHistory.GetTail() == nullptr)
+	{
+		return;
+	}
+	FFramePackage FrameToCheck;
+	bool bShouldInterpolate = true;
+
+	// Hit Character's Frame History
+	const TDoubleLinkedList<FFramePackage>& History = HitCharacter->GetLagCompensationComponent()->FrameHistory;
+	const float OldestHistoryTime = History.GetTail()->GetValue().Time;
+
+	// Too far back/too much lag
+	if (OldestHistoryTime > HitTime)
+	{
+		return;
+	}
+	if (OldestHistoryTime == HitTime)
+	{
+		FrameToCheck = History.GetTail()->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	const float NewestHistoryTime = History.GetHead()->GetValue().Time;
+	if (NewestHistoryTime <= HitTime)
+	{
+		FrameToCheck = History.GetHead()->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Younger = History.GetHead();
+	TDoubleLinkedList<FFramePackage>::TDoubleLinkedListNode* Older = Younger;
+	// Find the two frames that are closest to the hit time
+	while (Older->GetValue().Time > HitTime)
+	{
+		// March back until: OlderTime < HitTime < YoungerTime
+		if (Older->GetNextNode() == nullptr)
+		{
+			break;
+		}
+		Older = Older->GetNextNode();
+		if (Older->GetValue().Time > HitTime)
+		{
+			Younger = Older;
+		}
+	}
+
+	if (Older->GetValue().Time == HitTime)
+	{
+		FrameToCheck = Older->GetValue();
+		bShouldInterpolate = false;
+	}
+
+	if (bShouldInterpolate)
+	{
+		// Interpolate between the two frames
+	}
+}
+
 ABlasterCharacter* ULagCompensationComponent::GetCharacter() const
 {
 	return Character == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : Character;
