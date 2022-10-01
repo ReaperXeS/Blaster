@@ -11,15 +11,9 @@ ULagCompensationComponent::ULagCompensationComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
 void ULagCompensationComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	FFramePackage Package;
-	SaveFramePackage(Package);
-
-	ShowFramePackage(Package, FColor::Orange);
 }
 
 // @ServerCall
@@ -46,7 +40,7 @@ void ULagCompensationComponent::ShowFramePackage(FFramePackage& Package, const F
 	{
 		const FBoxInformation BoxInfo = BoxPair.Value;
 
-		DrawDebugBox(GetWorld(), BoxInfo.Location, BoxInfo.BoxExtent, FQuat(BoxInfo.Rotation), Color, true);
+		DrawDebugBox(GetWorld(), BoxInfo.Location, BoxInfo.BoxExtent, FQuat(BoxInfo.Rotation), Color, false, 4.f);
 	}
 }
 
@@ -58,4 +52,21 @@ ABlasterCharacter* ULagCompensationComponent::GetCharacter() const
 void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (FrameHistory.Num() > 1)
+	{
+		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		while (HistoryLength >= MaxRecordTime)
+		{
+			FrameHistory.RemoveNode(FrameHistory.GetTail());
+
+			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		}
+	}
+
+	FFramePackage CurrentFrame;
+	SaveFramePackage(CurrentFrame);
+	FrameHistory.AddHead(CurrentFrame);
+
+	ShowFramePackage(CurrentFrame, FColor::Red);
 }
