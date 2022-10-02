@@ -255,7 +255,8 @@ void ABlasterPlayerController::SetHUDTime()
 void ABlasterPlayerController::ClientReportServerTime_Implementation(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest)
 {
 	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
-	const float CurrentServerTime = TimeServerReceivedClientRequest + (RoundTripTime * 0.5f);
+	SingleTripTime = (RoundTripTime * 0.5f);
+	const float CurrentServerTime = TimeServerReceivedClientRequest + SingleTripTime;
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
@@ -398,7 +399,7 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 	CheckPing(DeltaSeconds);
 }
 
-float ABlasterPlayerController::GetServerTime()
+float ABlasterPlayerController::GetServerTime() const
 {
 	if (HasAuthority())
 	{

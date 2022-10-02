@@ -116,6 +116,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius = 75.f;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float Damage = 20.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	bool bUseServerSideRewind = false;
 private:
 	/*********************************
 	 * Trace end with scatter
@@ -172,6 +177,10 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType = EWeaponType::EWT_AssaultRifle;
+
+protected:
+	ABlasterCharacter* GetBlasterOwnerCharacter() const;
+	ABlasterPlayerController* GetBlasterOwnerController() const;
 public:
 	void SetWeaponState(EWeaponState aState);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -185,4 +194,5 @@ public:
 	bool IsFull() const;
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };

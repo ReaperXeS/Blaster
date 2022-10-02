@@ -246,6 +246,16 @@ void AWeapon::HandleWeaponStateDropped() const
 	EnableCustomDepth(true);
 }
 
+ABlasterCharacter* AWeapon::GetBlasterOwnerCharacter() const
+{
+	return BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
+}
+
+ABlasterPlayerController* AWeapon::GetBlasterOwnerController() const
+{
+	return BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+}
+
 // Server
 void AWeapon::SetWeaponState(EWeaponState aState)
 {

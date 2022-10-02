@@ -16,9 +16,6 @@ class BLASTER_API AHitScanWeapon : public AWeapon
 private:
 protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
-	float Damage = 20.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon")
 	class UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon")

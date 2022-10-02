@@ -32,7 +32,7 @@ public:
 	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	// Synced with server world clock
-	virtual float GetServerTime();
+	virtual float GetServerTime() const;
 
 	// Synced with server clock as soon as possible
 	virtual void ReceivedPlayer() override;
@@ -41,6 +41,8 @@ public:
 	void HandleCooldown();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	float SingleTripTime = 0.f;
 protected:
 	virtual void BeginPlay() override;
 	class ABlasterHUD* GetBlasterHUD();
