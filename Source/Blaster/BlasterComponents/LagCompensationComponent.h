@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/Character/BlasterCharacter.h"
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
 
@@ -32,6 +33,9 @@ struct FFramePackage
 
 	UPROPERTY()
 	TMap<FName, FBoxInformation> HitBoxInfo;
+
+	UPROPERTY()
+	ABlasterCharacter* Character;
 };
 
 USTRUCT(BlueprintType)
@@ -49,6 +53,18 @@ struct FServerSideRewindResult
 	FHitResult HitResult;
 };
 
+USTRUCT(BlueprintType)
+struct FShotgunServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, uint32> HeadShots;
+
+	UPROPERTY()
+	TMap<ABlasterCharacter*, uint32> BodyShots;
+};
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class BLASTER_API ULagCompensationComponent : public UActorComponent
 {
@@ -60,10 +76,14 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ShowFramePackage(FFramePackage& Package, FColor Color) const;
-	FServerSideRewindResult ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime);
+	FServerSideRewindResult ServerSideRewind(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime) const;
 
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(class ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime, class AWeapon* DamageCauser);
+
+	// TODO: Not used because we do damage for each pellet hit
+	UFUNCTION(Server, Reliable)
+	void ShotgunServerScoreRequest(const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, const float& HitTime);
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package) const;
@@ -73,6 +93,15 @@ protected:
 	static void MoveBoxes(ABlasterCharacter* HitCharacter, const FFramePackage& FramePackage, bool bResetPosition);
 	static void EnableCharacterMeshCollision(const ABlasterCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 
+	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, const float& HitTime) const;
+
+	/************************/
+	/* Shotguns				*/
+	/************************/
+	// TODO: Not used because we do damage for each pellet hit
+	FShotgunServerSideRewindResult ShotgunServerSideRewind(const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, const float& HitTime) const;
+	// TODO: Not used because we do damage for each pellet hit
+	FShotgunServerSideRewindResult ConfirmShotgunHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations) const;
 
 	ABlasterCharacter* GetCharacter() const;
 	void SaveFramePackage();

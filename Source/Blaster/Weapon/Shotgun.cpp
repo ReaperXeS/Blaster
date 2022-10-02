@@ -8,6 +8,8 @@
 #include "particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
 
 void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
@@ -36,9 +38,14 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			{
 				if (ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()); HitCharacter)
 				{
-					if (HasAuthority())
+					if (HasAuthority() && !bUseServerSideRewind)
 					{
 						UGameplayStatics::ApplyPointDamage(HitCharacter, Damage, HitResult.ImpactPoint, HitResult, OwnerController, this, UDamageType::StaticClass());
+					}
+
+					if (!HasAuthority() && bUseServerSideRewind && GetBlasterOwnerCharacter() && GetBlasterOwnerCharacter()->GetLagCompensationComponent())
+					{
+						GetBlasterOwnerCharacter()->GetLagCompensationComponent()->ServerScoreRequest(HitCharacter, Start, HitTarget, GetBlasterOwnerController()->GetServerTime() - GetBlasterOwnerController()->SingleTripTime, this);
 					}
 				}
 
