@@ -3,7 +3,9 @@
 
 #include "ProjectileBullet.h"
 
-#include "GameFramework/Character.h"
+#include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/PlayerController/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFrameWork/ProjectileMovementComponent.h"
 
@@ -32,12 +34,23 @@ void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Apply Damage
-	if (const auto OwnerCharacter = Cast<ACharacter>(GetOwner()))
+	if (const auto OwnerCharacter = Cast<ABlasterCharacter>(GetOwner()))
 	{
-		if (const auto OwnerController = OwnerCharacter->Controller)
+		if (const auto OwnerController = Cast<ABlasterPlayerController>(OwnerCharacter->Controller))
 		{
 			const auto HitDirection = (Hit.Location - GetActorLocation()).GetSafeNormal();
-			UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitDirection, Hit, OwnerController, this, UDamageType::StaticClass());
+			if (OwnerCharacter->HasAuthority() && (!bUseServerSideRewind || OwnerCharacter->IsLocallyControlled()))
+			{
+				UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitDirection, Hit, OwnerController, this, UDamageType::StaticClass());
+				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+				return;
+			}
+
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
+			if (bUseServerSideRewind && HitCharacter && OwnerCharacter->GetLagCompensationComponent() && OwnerCharacter->IsLocallyControlled())
+			{
+				OwnerCharacter->GetLagCompensationComponent()->ProjectileServerScoreRequest(HitCharacter, TraceStart, InitialVelocity, OwnerController->GetServerTime() - OwnerController->SingleTripTime);
+			}
 		}
 	}
 
@@ -49,20 +62,20 @@ void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FPredictProjectilePathParams PredictParams;
-	PredictParams.bTraceWithChannel = true;
-	PredictParams.bTraceWithCollision = true;
-	PredictParams.DrawDebugTime = 5.f;
-	PredictParams.DrawDebugType = EDrawDebugTrace::ForDuration;
-	PredictParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
-	PredictParams.MaxSimTime = 4.f;
-	PredictParams.ProjectileRadius = 5.f;
-	PredictParams.SimFrequency = 30.f;
-	PredictParams.StartLocation = GetActorLocation();
-	PredictParams.TraceChannel = ECC_Visibility;
-	PredictParams.ActorsToIgnore.Add(this);
-
-	FPredictProjectilePathResult PredictResult;
-
-	UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
+	// FPredictProjectilePathParams PredictParams;
+	// PredictParams.bTraceWithChannel = true;
+	// PredictParams.bTraceWithCollision = true;
+	// PredictParams.DrawDebugTime = 5.f;
+	// PredictParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+	// PredictParams.LaunchVelocity = GetActorForwardVector() * InitialSpeed;
+	// PredictParams.MaxSimTime = 4.f;
+	// PredictParams.ProjectileRadius = 5.f;
+	// PredictParams.SimFrequency = 30.f;
+	// PredictParams.StartLocation = GetActorLocation();
+	// PredictParams.TraceChannel = ECC_Visibility;
+	// PredictParams.ActorsToIgnore.Add(this);
+	//
+	// FPredictProjectilePathResult PredictResult;
+	//
+	// UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 }
