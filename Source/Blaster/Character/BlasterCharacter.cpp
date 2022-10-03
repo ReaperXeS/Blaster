@@ -277,6 +277,9 @@ UBoxComponent* ABlasterCharacter::CreateHitBox(const FName SocketName, FName Box
 	UBoxComponent* HitBox = CreateDefaultSubobject<UBoxComponent>(BoxName);
 	HitBox->SetupAttachment(GetMesh(), SocketName);
 	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBox->SetCollisionObjectType(ECC_HitBox);
+	HitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	HitBox->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 	HitCollisionBoxes.Add(BoxName, HitBox);
 	return HitBox;
 }
