@@ -99,6 +99,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly);
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -175,7 +176,7 @@ void AWeapon::ClientAddAmmo_Implementation(const int32 AmmoToAdd)
 	}
 }
 
-void AWeapon::HandleUpdateWeaponState() const
+void AWeapon::HandleUpdateWeaponState()
 {
 	switch (WeaponState)
 	{
@@ -193,7 +194,7 @@ void AWeapon::HandleUpdateWeaponState() const
 	}
 }
 
-void AWeapon::HandleWeaponStateEquipped() const
+void AWeapon::HandleWeaponStateEquipped()
 {
 	ShowPickupWidget(false);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -207,9 +208,14 @@ void AWeapon::HandleWeaponStateEquipped() const
 		WeaponMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 	}
 	EnableCustomDepth(false);
+
+	if (bUseServerSideRewind && HasAuthority() && GetBlasterOwnerController() && !GetBlasterOwnerController()->HighPingDelegate.IsBound())
+	{
+		BlasterOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+	}
 }
 
-void AWeapon::HandleWeaponStateEquippedSecondary() const
+void AWeapon::HandleWeaponStateEquippedSecondary()
 {
 	ShowPickupWidget(false);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -226,9 +232,14 @@ void AWeapon::HandleWeaponStateEquippedSecondary() const
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
+
+	if (GetBlasterOwnerController() && GetBlasterOwnerController()->HighPingDelegate.IsBound())
+	{
+		BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+	}
 }
 
-void AWeapon::HandleWeaponStateDropped() const
+void AWeapon::HandleWeaponStateDropped()
 {
 	if (HasAuthority())
 	{
@@ -244,6 +255,11 @@ void AWeapon::HandleWeaponStateDropped() const
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
+
+	if (GetBlasterOwnerController() && GetBlasterOwnerController()->HighPingDelegate.IsBound())
+	{
+		BlasterOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+	}
 }
 
 ABlasterCharacter* AWeapon::GetBlasterOwnerCharacter() const
@@ -251,9 +267,16 @@ ABlasterCharacter* AWeapon::GetBlasterOwnerCharacter() const
 	return BlasterOwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : BlasterOwnerCharacter;
 }
 
-ABlasterPlayerController* AWeapon::GetBlasterOwnerController() const
+ABlasterPlayerController* AWeapon::GetBlasterOwnerController()
 {
-	return BlasterOwnerController == nullptr ? Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller) : BlasterOwnerController;
+	if (BlasterOwnerController == nullptr)
+	{
+		if (GetBlasterOwnerCharacter())
+		{
+			BlasterOwnerController = Cast<ABlasterPlayerController>(BlasterOwnerCharacter->Controller);
+		}
+	}
+	return BlasterOwnerController;
 }
 
 // Server
@@ -272,6 +295,11 @@ bool AWeapon::IsEmpty() const
 bool AWeapon::IsFull() const
 {
 	return Ammo >= MagCapacity;
+}
+
+void AWeapon::OnPingTooHigh(const bool bPingTooHigh)
+{
+	bUseServerSideRewind = !bPingTooHigh;
 }
 
 // Client Only

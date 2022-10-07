@@ -7,6 +7,9 @@
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHight);
+
 /**
  * 
  */
@@ -29,7 +32,11 @@ public:
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
+
 	void CheckPing(float DeltaSeconds);
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
+
 	virtual void Tick(float DeltaSeconds) override;
 	// Synced with server world clock
 	virtual float GetServerTime() const;
@@ -43,6 +50,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	float SingleTripTime = 0.f;
+
+	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
 	class ABlasterHUD* GetBlasterHUD();

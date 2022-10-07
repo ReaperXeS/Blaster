@@ -119,8 +119,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float Damage = 20.0f;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon")
+	UPROPERTY(Replicated, EditAnywhere, Category = "Weapon")
 	bool bUseServerSideRewind = false;
+
+	UFUNCTION()
+	void OnPingTooHigh(const bool bPingTooHigh);
 private:
 	/*********************************
 	 * Trace end with scatter
@@ -161,10 +164,10 @@ private:
 	// The number of unprocessed server request for Ammo. Incremented by SpendRound() and decremented by ClientUpdateAmmo()
 	int32 SequenceAmmoRequest = 0;
 
-	void HandleUpdateWeaponState() const;
-	void HandleWeaponStateEquipped() const;
-	void HandleWeaponStateEquippedSecondary() const;
-	void HandleWeaponStateDropped() const;
+	void HandleUpdateWeaponState();
+	void HandleWeaponStateEquipped();
+	void HandleWeaponStateEquippedSecondary();
+	void HandleWeaponStateDropped();
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity = 30;
@@ -180,7 +183,7 @@ private:
 
 protected:
 	ABlasterCharacter* GetBlasterOwnerCharacter() const;
-	ABlasterPlayerController* GetBlasterOwnerController() const;
+	ABlasterPlayerController* GetBlasterOwnerController();
 public:
 	void SetWeaponState(EWeaponState aState);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
