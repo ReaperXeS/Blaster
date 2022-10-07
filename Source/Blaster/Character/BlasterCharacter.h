@@ -22,10 +22,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+
+	/************************************/
+	/* Montage Functions				*/
+	/************************************/
 	void PlayFireMontage(bool aIsAiming) const;
 	void PlayReloadMontage() const;
 	// ReSharper disable once IdentifierTypo
 	void PlayElimMontage() const;
+	void PlaySwapMontage() const;
 	void PlayThrowGrenadeMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
@@ -203,6 +208,9 @@ private:
 	UAnimMontage* ElimMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ThrowGrenadeMontage;
 
 	UPROPERTY(EditAnywhere)
@@ -344,4 +352,6 @@ public:
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return Buff; }
 	bool IsLocallyReloading() const;
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensation; }
+
+	bool bFinishedSwapping = false;
 };

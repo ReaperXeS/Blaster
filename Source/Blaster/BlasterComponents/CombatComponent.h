@@ -171,7 +171,7 @@ private:
 	void FireShotgunWeapon();
 	void FireTimerFinished();
 
-	bool CanFire() const;
+	bool CanFire();
 
 	// Carried Ammo for the currently equipped weapon
 	UPROPERTY(ReplicatedUsing=OnRep_CarriedAmmo)
@@ -202,6 +202,8 @@ private:
 	int32 MaxGrenades = 4;
 public:
 	void FinishReloading();
+	void FinishSwapWeapons();
+	void FinishSwapAttachWeapons();
 
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool ShouldSwapWeapons() const;

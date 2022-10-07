@@ -231,7 +231,6 @@ void AWeapon::HandleWeaponStateEquippedSecondary()
 
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 	WeaponMesh->MarkRenderStateDirty();
-	EnableCustomDepth(true);
 
 	if (GetBlasterOwnerController() && GetBlasterOwnerController()->HighPingDelegate.IsBound())
 	{

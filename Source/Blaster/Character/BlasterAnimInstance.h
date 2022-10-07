@@ -23,6 +23,12 @@ public:
 	void FinishReloading() const;
 
 	UFUNCTION(BlueprintCallable)
+	void FinishSwapWeapons();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishSwapAttachWeapons();
+
+	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload() const;
 
 	UFUNCTION(BlueprintCallable)

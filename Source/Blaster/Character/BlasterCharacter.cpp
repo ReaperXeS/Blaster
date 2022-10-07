@@ -446,6 +446,14 @@ void ABlasterCharacter::PlayElimMontage() const
 	}
 }
 
+void ABlasterCharacter::PlaySwapMontage() const
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); SwapMontage && AnimInstance)
+	{
+		AnimInstance->Montage_Play(SwapMontage);
+	}
+}
+
 void ABlasterCharacter::PlayThrowGrenadeMontage() const
 {
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); ThrowGrenadeMontage && AnimInstance)
@@ -571,7 +579,17 @@ void ABlasterCharacter::EquipButtonPressed()
 
 	if (Combat)
 	{
-		ServerEquipButtonPressed();
+		if (Combat->CombatState == ECombatState::ECS_Unoccupied)
+		{
+			ServerEquipButtonPressed();
+		}
+
+		if (Combat->ShouldSwapWeapons() && !HasAuthority() && Combat->CombatState == ECombatState::ECS_Unoccupied && OverlappingWeapon == nullptr)
+		{
+			PlaySwapMontage();
+			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
+			bFinishedSwapping = false;
+		}
 	}
 }
 
