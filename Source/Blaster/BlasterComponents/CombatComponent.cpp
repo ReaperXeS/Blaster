@@ -432,6 +432,24 @@ void UCombatComponent::OnRep_SecondaryWeapon() const
 	}
 }
 
+bool UCombatComponent::ServerShotgunFire_Validate(const TArray<FVector_NetQuantize>& TraceHitTargetArray, float FireDelay)
+{
+	if (EquippedWeapon)
+	{
+		return FMath::IsNearlyEqual(EquippedWeapon->FireDelay, FireDelay, 0.01f);
+	}
+	return true;
+}
+
+bool UCombatComponent::ServerFire_Validate(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
+{
+	if (EquippedWeapon)
+	{
+		return FMath::IsNearlyEqual(EquippedWeapon->FireDelay, FireDelay, 0.01f);
+	}
+	return true;
+}
+
 void UCombatComponent::TickComponent(const float DeltaTime, const ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -659,7 +677,7 @@ void UCombatComponent::FireProjectileWeapon()
 		{
 			LocalFire(HitTarget);
 		}
-		ServerFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -672,7 +690,7 @@ void UCombatComponent::FireHitScanWeapon()
 		{
 			LocalFire(HitTarget);
 		}
-		ServerFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -686,7 +704,7 @@ void UCombatComponent::FireShotgunWeapon()
 		{
 			LocalShotgunFire(Shotgun, HitTargets);
 		}
-		ServerShotgunFire(HitTargets);
+		ServerShotgunFire(HitTargets, Shotgun->FireDelay);
 	}
 }
 
@@ -845,12 +863,12 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
-void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
 {
 	MulticastFire(TraceHitTarget);
 }
 
-void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargetArray)
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargetArray, float FireDelay)
 {
 	MulticastShotgunFire(TraceHitTargetArray);
 }
