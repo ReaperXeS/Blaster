@@ -22,10 +22,15 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+
+	/************************************/
+	/* Montage Functions				*/
+	/************************************/
 	void PlayFireMontage(bool aIsAiming) const;
 	void PlayReloadMontage() const;
 	// ReSharper disable once IdentifierTypo
 	void PlayElimMontage() const;
+	void PlaySwapMontage() const;
 	void PlayThrowGrenadeMontage() const;
 
 	virtual void OnRep_ReplicatedMovement() override;
@@ -46,7 +51,70 @@ public:
 
 	void Heal(float HealAmount);
 	void ReplenishShield(const float ShieldAmount);
+
+	/********************************************/
+	/* Hit boxes used for Server Side Rewind	*/
+	/********************************************/
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* head;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* pelvis;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_02;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* spine_03;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* upperarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* lowerarm_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* hand_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* backpack;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* blanket;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* thigh_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* calf_r;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_l;
+
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* foot_r;
+
+	UPROPERTY()
+	TMap<FName, UBoxComponent*> HitCollisionBoxes;
 protected:
+	UBoxComponent* CreateHitBox(FName SocketName);
+	UBoxComponent* CreateHitBox(FName SocketName, FName HitBoxName);
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	void RotateInPlace(float DeltaTime);
@@ -99,11 +167,17 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon) const;
 
+	/********************************************/
+	/* Blaster Components						*/
+	/********************************************/
 	UPROPERTY(VisibleAnywhere)
 	class UCombatComponent* Combat;
 
 	UPROPERTY(VisibleAnywhere)
 	class UBuffComponent* Buff;
+
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensation;
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
@@ -132,6 +206,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	// ReSharper disable once IdentifierTypo
 	UAnimMontage* ElimMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapMontage;
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ThrowGrenadeMontage;
@@ -273,4 +350,8 @@ public:
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return Buff; }
+	bool IsLocallyReloading() const;
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensation; }
+
+	bool bFinishedSwapping = false;
 };

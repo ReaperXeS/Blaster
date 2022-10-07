@@ -17,6 +17,15 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "Default Max")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+	EFT_MAX UMETA(DisplayName = "Default Max")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -33,6 +42,7 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Drop();
 	void AddAmmo(int32 AmmoToAdd);
+	FVector TraceEndWithScatter(const FVector& HitTarget) const;
 
 
 	virtual void SetOwner(AActor* NewOwner) override;
@@ -83,6 +93,12 @@ public:
 	void EnableCustomDepth(bool bEnabled) const;
 
 	bool bDestroyWeapon = false;
+
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = false;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -94,7 +110,25 @@ protected:
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	void SetEnablePhysics(bool Enabled) const;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float Damage = 20.0f;
+
+	UPROPERTY(Replicated, EditAnywhere, Category = "Weapon")
+	bool bUseServerSideRewind = false;
+
+	UFUNCTION()
+	void OnPingTooHigh(const bool bPingTooHigh);
 private:
+	/*********************************
+	 * Trace end with scatter
+	 * ******************************/
+
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
 
@@ -116,17 +150,24 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ACasing> CasingClass;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo = 30;
 
-	void SpendRound();
 
-	UFUNCTION()
-	void OnRep_Ammo();
-	void HandleUpdateWeaponState() const;
-	void HandleWeaponStateEquipped() const;
-	void HandleWeaponStateEquippedSecondary() const;
-	void HandleWeaponStateDropped() const;
+	void SpendRound();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(const int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(const int32 AmmoToAdd);
+
+	// The number of unprocessed server request for Ammo. Incremented by SpendRound() and decremented by ClientUpdateAmmo()
+	int32 SequenceAmmoRequest = 0;
+
+	void HandleUpdateWeaponState();
+	void HandleWeaponStateEquipped();
+	void HandleWeaponStateEquippedSecondary();
+	void HandleWeaponStateDropped();
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity = 30;
@@ -139,6 +180,10 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType = EWeaponType::EWT_AssaultRifle;
+
+protected:
+	ABlasterCharacter* GetBlasterOwnerCharacter() const;
+	ABlasterPlayerController* GetBlasterOwnerController();
 public:
 	void SetWeaponState(EWeaponState aState);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -152,4 +197,5 @@ public:
 	bool IsFull() const;
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };

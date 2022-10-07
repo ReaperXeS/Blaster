@@ -79,6 +79,10 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	}
 
 	bUseFABRIK = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied;
+	if (BlasterCharacter->IsLocallyControlled() && BlasterCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade && BlasterCharacter->bFinishedSwapping)
+	{
+		bUseFABRIK = !BlasterCharacter->IsLocallyReloading();
+	}
 	bUseAimOffsets = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
 	bTransformRightHand = BlasterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && !BlasterCharacter->GetDisableGameplay();
 }
@@ -88,6 +92,22 @@ void UBlasterAnimInstance::FinishReloading() const
 	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
 	{
 		BlasterCharacter->GetCombatComponent()->FinishReloading();
+	}
+}
+
+void UBlasterAnimInstance::FinishSwapWeapons()
+{
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->GetCombatComponent()->FinishSwapWeapons();
+	}
+}
+
+void UBlasterAnimInstance::FinishSwapAttachWeapons()
+{
+	if (BlasterCharacter && BlasterCharacter->GetCombatComponent())
+	{
+		BlasterCharacter->GetCombatComponent()->FinishSwapAttachWeapons();
 	}
 }
 

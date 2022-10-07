@@ -7,6 +7,9 @@
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHight);
+
 /**
  * 
  */
@@ -29,9 +32,14 @@ public:
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
+
+	void CheckPing(float DeltaSeconds);
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
+
 	virtual void Tick(float DeltaSeconds) override;
 	// Synced with server world clock
-	virtual float GetServerTime();
+	virtual float GetServerTime() const;
 
 	// Synced with server clock as soon as possible
 	virtual void ReceivedPlayer() override;
@@ -40,6 +48,10 @@ public:
 	void HandleCooldown();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	float SingleTripTime = 0.f;
+
+	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
 	class ABlasterHUD* GetBlasterHUD();
@@ -79,6 +91,8 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientJoinMiddleOfGame(FName StateOfMatch, float Warmup, float Match, float StartingTime, float Cooldown);
 
+	void HighPingWarning(const bool bShow);
+	bool HighPingWarningAnimationIsPlaying();
 public:
 private:
 	UPROPERTY()
@@ -99,4 +113,16 @@ private:
 
 	UFUNCTION()
 	void OnRep_MatchState();
+
+	float HighPingRunningTime = 0.f;
+	float HighPingAnimationRunningTime = 0.f;
+
+	UPROPERTY(EditAnywhere, Category = "Network")
+	float HighPingDuration = 5.f;
+
+	UPROPERTY(EditAnywhere, Category = "Network")
+	float CheckPingFrequency = 20.f;
+
+	UPROPERTY(EditAnywhere, Category = "Network")
+	float HighPingThreshold = 50.f;
 };

@@ -48,6 +48,7 @@ public:
 	TSubclassOf<class AProjectile> GrenadeClass;
 
 	void PickupAmmo(const EWeaponType WeaponType, int32 AmmoAmount);
+	bool bLocallyReloading = false;
 protected:
 	virtual void BeginPlay() override;
 	void DropEquippedWeapon() const;
@@ -69,13 +70,21 @@ protected:
 	UFUNCTION()
 	void OnRep_SecondaryWeapon() const;
 
-	UFUNCTION(Server, Reliable)
-	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget, float FireDelay);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargetArray, float FireDelay);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargetArray);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+	void LocalFire(const FVector_NetQuantize& TraceHitTarget) const;
+	void LocalShotgunFire(class AShotgun* Shotgun, const TArray<FVector_NetQuantize>& TraceHitTargetArray);
 
 	void SetHUDCrosshairs(float DeltaTime);
 
@@ -103,8 +112,13 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 
-	UPROPERTY(Replicated)
-	bool bAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+	bool bAiming = false;
+
+	bool bAimingButtonPressed = false;
+
+	UFUNCTION()
+	void OnRep_Aiming();
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed;
@@ -152,9 +166,12 @@ private:
 
 	void StartFireTimer();
 	void Fire();
+	void FireProjectileWeapon();
+	void FireHitScanWeapon();
+	void FireShotgunWeapon();
 	void FireTimerFinished();
 
-	bool CanFire() const;
+	bool CanFire();
 
 	// Carried Ammo for the currently equipped weapon
 	UPROPERTY(ReplicatedUsing=OnRep_CarriedAmmo)
@@ -185,6 +202,8 @@ private:
 	int32 MaxGrenades = 4;
 public:
 	void FinishReloading();
+	void FinishSwapWeapons();
+	void FinishSwapAttachWeapons();
 
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 	bool ShouldSwapWeapons() const;

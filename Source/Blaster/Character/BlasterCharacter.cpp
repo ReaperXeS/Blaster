@@ -13,12 +13,14 @@
 #include "BlasterAnimInstance.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -48,6 +50,8 @@ ABlasterCharacter::ABlasterCharacter()
 	Buff = CreateDefaultSubobject<UBuffComponent>(TEXT("Buff"));
 	Buff->SetIsReplicated(true);
 
+	LagCompensation = CreateDefaultSubobject<ULagCompensationComponent>(TEXT("LagCompensation"));
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -63,6 +67,29 @@ ABlasterCharacter::ABlasterCharacter()
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AttachedGrenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), TEXT("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	/************************************/
+	/* Hit Boxes for Server Side Rewind */
+	/************************************/
+
+	head = CreateHitBox(FName("head"));
+	pelvis = CreateHitBox(FName("pelvis"));
+	spine_02 = CreateHitBox(FName("spine_02"));
+	spine_03 = CreateHitBox(FName("spine_03"));
+	upperarm_l = CreateHitBox(FName("upperarm_l"));
+	upperarm_r = CreateHitBox(FName("upperarm_r"));
+	lowerarm_l = CreateHitBox(FName("lowerarm_l"));
+	lowerarm_r = CreateHitBox(FName("lowerarm_r"));
+	hand_l = CreateHitBox(FName("hand_l"));
+	hand_r = CreateHitBox(FName("hand_r"));
+	backpack = CreateHitBox(FName("backpack"));
+	blanket = CreateHitBox(FName("backpack"), FName("blanket"));
+	thigh_l = CreateHitBox(FName("thigh_l"));
+	thigh_r = CreateHitBox(FName("thigh_r"));
+	calf_l = CreateHitBox(FName("calf_l"));
+	calf_r = CreateHitBox(FName("calf_r"));
+	foot_l = CreateHitBox(FName("foot_l"));
+	foot_r = CreateHitBox(FName("foot_r"));
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -240,6 +267,23 @@ void ABlasterCharacter::Destroyed()
 	}
 }
 
+UBoxComponent* ABlasterCharacter::CreateHitBox(FName SocketName)
+{
+	return CreateHitBox(SocketName, SocketName);
+}
+
+UBoxComponent* ABlasterCharacter::CreateHitBox(const FName SocketName, FName BoxName)
+{
+	UBoxComponent* HitBox = CreateDefaultSubobject<UBoxComponent>(BoxName);
+	HitBox->SetupAttachment(GetMesh(), SocketName);
+	HitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HitBox->SetCollisionObjectType(ECC_HitBox);
+	HitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
+	HitBox->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
+	HitCollisionBoxes.Add(BoxName, HitBox);
+	return HitBox;
+}
+
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -324,6 +368,15 @@ void ABlasterCharacter::PostInitializeComponents()
 		Buff->SetInitialSpeeds(GetCharacterMovement()->MaxWalkSpeed, GetCharacterMovement()->MaxWalkSpeedCrouched);
 		Buff->SetInitialJumpVelocity(GetCharacterMovement()->JumpZVelocity);
 	}
+
+	if (LagCompensation)
+	{
+		LagCompensation->Character = this;
+		if (GetController())
+		{
+			LagCompensation->Controller = Cast<ABlasterPlayerController>(GetController());
+		}
+	}
 }
 
 void ABlasterCharacter::PlayFireMontage(bool aIsAiming) const
@@ -390,6 +443,14 @@ void ABlasterCharacter::PlayElimMontage() const
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); ElimMontage && AnimInstance)
 	{
 		AnimInstance->Montage_Play(ElimMontage);
+	}
+}
+
+void ABlasterCharacter::PlaySwapMontage() const
+{
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance(); SwapMontage && AnimInstance)
+	{
+		AnimInstance->Montage_Play(SwapMontage);
 	}
 }
 
@@ -518,7 +579,17 @@ void ABlasterCharacter::EquipButtonPressed()
 
 	if (Combat)
 	{
-		ServerEquipButtonPressed();
+		if (Combat->CombatState == ECombatState::ECS_Unoccupied)
+		{
+			ServerEquipButtonPressed();
+		}
+
+		if (Combat->ShouldSwapWeapons() && !HasAuthority() && Combat->CombatState == ECombatState::ECS_Unoccupied && OverlappingWeapon == nullptr)
+		{
+			PlaySwapMontage();
+			Combat->CombatState = ECombatState::ECS_SwappingWeapons;
+			bFinishedSwapping = false;
+		}
 	}
 }
 
@@ -917,4 +988,14 @@ ECombatState ABlasterCharacter::GetCombatState()
 	}
 
 	return Combat->CombatState;
+}
+
+bool ABlasterCharacter::IsLocallyReloading() const
+{
+	if (Combat == nullptr)
+	{
+		return false;
+	}
+
+	return Combat->bLocallyReloading;
 }

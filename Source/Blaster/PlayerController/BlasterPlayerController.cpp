@@ -14,6 +14,7 @@
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/HUD/Announcement.h"
 #include "Blaster/PlayerState/BlasterPlayerState.h"
+#include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
@@ -254,7 +255,8 @@ void ABlasterPlayerController::SetHUDTime()
 void ABlasterPlayerController::ClientReportServerTime_Implementation(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest)
 {
 	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
-	const float CurrentServerTime = TimeServerReceivedClientRequest + (RoundTripTime * 0.5f);
+	SingleTripTime = (RoundTripTime * 0.5f);
+	const float CurrentServerTime = TimeServerReceivedClientRequest + SingleTripTime;
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
 
@@ -302,6 +304,35 @@ void ABlasterPlayerController::CheckTimeSync(const float DeltaSeconds)
 	}
 }
 
+void ABlasterPlayerController::HighPingWarning(const bool bShow)
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay && GetBlasterHUD()->CharacterOverlay->HighPingImage)
+	{
+		if (bShow)
+		{
+			GetBlasterHUD()->CharacterOverlay->HighPingImage->SetOpacity(1.f);
+			GetBlasterHUD()->CharacterOverlay->PlayAnimation(GetBlasterHUD()->CharacterOverlay->HighPingAnimation, 0.f, 5);
+		}
+		else
+		{
+			GetBlasterHUD()->CharacterOverlay->HighPingImage->SetOpacity(0.f);
+			if (HighPingWarningAnimationIsPlaying())
+			{
+				GetBlasterHUD()->CharacterOverlay->StopAnimation(GetBlasterHUD()->CharacterOverlay->HighPingAnimation);
+			}
+		}
+	}
+}
+
+bool ABlasterPlayerController::HighPingWarningAnimationIsPlaying()
+{
+	if (GetBlasterHUD() && GetBlasterHUD()->CharacterOverlay && GetBlasterHUD()->CharacterOverlay->HighPingAnimation)
+	{
+		return GetBlasterHUD()->CharacterOverlay->IsAnimationPlaying(GetBlasterHUD()->CharacterOverlay->HighPingAnimation);
+	}
+	return false;
+}
+
 void ABlasterPlayerController::ClientJoinMiddleOfGame_Implementation(const FName StateOfMatch, const float Warmup, const float Match, const float StartingTime, const float Cooldown)
 {
 	CooldownTime = Cooldown;
@@ -332,15 +363,55 @@ void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 	}
 }
 
+void ABlasterPlayerController::CheckPing(const float DeltaSeconds)
+{
+	HighPingRunningTime += DeltaSeconds;
+	if (HighPingRunningTime > CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if (PlayerState)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Ping: %d"), PlayerState->GetCompressedPing() * 4);
+			if (PlayerState->GetCompressedPing() * 4 > HighPingThreshold)
+			{
+				HighPingWarning(true);
+				HighPingAnimationRunningTime = 0.f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
+			}
+		}
+		HighPingRunningTime = 0.f;
+	}
+
+	if (HighPingWarningAnimationIsPlaying())
+	{
+		HighPingAnimationRunningTime += DeltaSeconds;
+		if (HighPingAnimationRunningTime > HighPingDuration)
+		{
+			HighPingWarning(false);
+		}
+	}
+}
+
+// The ping is too high
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	HighPingDelegate.Broadcast(bHighPing);
+}
+
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
 	CheckTimeSync(DeltaSeconds);
 	SetHUDTime();
+	CheckPing(DeltaSeconds);
 }
 
-float ABlasterPlayerController::GetServerTime()
+float ABlasterPlayerController::GetServerTime() const
 {
 	if (HasAuthority())
 	{
