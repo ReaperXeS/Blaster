@@ -54,6 +54,10 @@ public:
 	FHighPingDelegate HighPingDelegate;
 protected:
 	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+
+	void ShowReturnToMainMenu();
+
 	class ABlasterHUD* GetBlasterHUD();
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
@@ -97,6 +101,17 @@ public:
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
+
+	/********************************/
+	/* Return to Main Menu Handling */
+	/********************************/
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidgetClass;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenuWidget;
+
+	bool bReturnToMainMenuWidgetIsShowing = false;
 
 	/*********************************
 	 * Variables set from Game Mode

@@ -16,6 +16,7 @@
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blaster/HUD/ReturnToMainMenu.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
 {
@@ -264,6 +265,37 @@ void ABlasterPlayerController::ServerRequestServerTime_Implementation(const floa
 {
 	const float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds();
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (InputComponent)
+	{
+		InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMainMenu);
+	}
+}
+
+void ABlasterPlayerController::ShowReturnToMainMenu()
+{
+	if (ReturnToMainMenuWidgetClass)
+	{
+		ReturnToMainMenuWidget = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidgetClass);
+		if (ReturnToMainMenuWidget)
+		{
+			bReturnToMainMenuWidgetIsShowing = !bReturnToMainMenuWidgetIsShowing;
+
+			if (bReturnToMainMenuWidgetIsShowing)
+			{
+				ReturnToMainMenuWidget->MenuSetup();
+			}
+			else
+			{
+				ReturnToMainMenuWidget->MenuTeardown();
+			}
+		}
+	}
 }
 
 void ABlasterPlayerController::HideDeathMessage()

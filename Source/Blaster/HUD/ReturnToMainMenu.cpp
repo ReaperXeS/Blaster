@@ -30,7 +30,7 @@ void UReturnToMainMenu::MenuSetup()
 	InputMode.SetWidgetToFocus(TakeWidget());
 	UpdateInputMode(InputMode, true);
 
-	if (ReturnToMainMenuButton)
+	if (ReturnToMainMenuButton && !ReturnToMainMenuButton->OnClicked.IsAlreadyBound(this, &UReturnToMainMenu::ReturnToMainMenuButtonClicked))
 	{
 		ReturnToMainMenuButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnToMainMenuButtonClicked);
 	}
@@ -38,7 +38,7 @@ void UReturnToMainMenu::MenuSetup()
 	if (const UGameInstance* GameInstance = GetGameInstance())
 	{
 		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-		if (MultiplayerSessionsSubsystem)
+		if (MultiplayerSessionsSubsystem && !MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UReturnToMainMenu::OnDestroySession))
 		{
 			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UReturnToMainMenu::OnDestroySession);
 		}
@@ -84,6 +84,16 @@ void UReturnToMainMenu::MenuTeardown()
 	RemoveFromParent();
 	const FInputModeGameOnly InputMode;
 	UpdateInputMode(InputMode, false);
+
+	if (ReturnToMainMenuButton && ReturnToMainMenuButton->OnClicked.IsAlreadyBound(this, &UReturnToMainMenu::ReturnToMainMenuButtonClicked))
+	{
+		ReturnToMainMenuButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnToMainMenuButtonClicked);
+	}
+
+	if (MultiplayerSessionsSubsystem && MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsAlreadyBound(this, &UReturnToMainMenu::OnDestroySession))
+	{
+		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.RemoveDynamic(this, &UReturnToMainMenu::OnDestroySession);
+	}
 }
 
 void UReturnToMainMenu::ReturnToMainMenuButtonClicked()
