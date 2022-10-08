@@ -59,6 +59,12 @@ public:
 
 	FOnLeftGame OnLeftGame;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead();
+
 	/********************************************/
 	/* Hit boxes used for Server Side Rewind	*/
 	/********************************************/
@@ -310,7 +316,7 @@ private:
 	UMaterialInstance* DissolveMaterialInstance;
 
 	/**
-	 * Elimination bot
+	 * Elimination effects
 	 **/
 	UPROPERTY(EditAnywhere, Category = "Elim")
 	UParticleSystem* EliminationBotEffect;
@@ -320,6 +326,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Elim")
 	class USoundCue* EliminationBotSound;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	class UNiagaraSystem* CrownSystem;
+
+	UPROPERTY()
+	class UNiagaraComponent* CrownComponent;
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;

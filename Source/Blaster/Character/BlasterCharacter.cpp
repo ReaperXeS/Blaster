@@ -21,6 +21,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "Components/BoxComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Blaster/GameState/BlasterGameState.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -187,6 +190,10 @@ void ABlasterCharacter::MulticastElimination_Implementation(const bool bPlayerLe
 		ShowSniperScopeWidget(false);
 	}
 
+	if (CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
 	GetWorldTimerManager().SetTimer(EliminationTimer, this, &ABlasterCharacter::EliminationTimerFinished, EliminationDelay);
 }
 
@@ -231,6 +238,11 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToDefeats(0); // Init Defeats
 			BlasterPlayerState->AddToScore(0.f); // Init Score
+
+			if (const ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)); BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+			{
+				MulticastGainedTheLead();
+			}
 		}
 	}
 }
@@ -250,6 +262,27 @@ void ABlasterCharacter::ReplenishShield(const float ShieldAmount)
 	{
 		Shield = FMath::Clamp(Shield + ShieldAmount, 0.f, MaxShield);
 		UpdateHUD();
+	}
+}
+
+void ABlasterCharacter::MulticastGainedTheLead_Implementation()
+{
+	if (CrownSystem && CrownComponent == nullptr)
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(), GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+	}
+
+	if (CrownComponent)
+	{
+		CrownComponent->Activate();
+	}
+}
+
+void ABlasterCharacter::MulticastLostTheLead_Implementation()
+{
+	if (CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
 	}
 }
 

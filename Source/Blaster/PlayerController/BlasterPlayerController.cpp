@@ -403,7 +403,7 @@ void ABlasterPlayerController::CheckPing(const float DeltaSeconds)
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if (PlayerState)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Ping: %d"), PlayerState->GetCompressedPing() * 4);
+			// UE_LOG(LogTemp, Warning, TEXT("Ping: %d"), PlayerState->GetCompressedPing() * 4);
 			if (PlayerState->GetCompressedPing() * 4 > HighPingThreshold)
 			{
 				HighPingWarning(true);
