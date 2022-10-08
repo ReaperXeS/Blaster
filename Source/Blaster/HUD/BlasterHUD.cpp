@@ -5,6 +5,7 @@
 #include "CharacterOverlay.h"
 #include "Announcement.h"
 #include "Blueprint/UserWidget.h"
+#include "ElimAnnouncement.h"
 
 void ABlasterHUD::BeginPlay()
 {
@@ -71,6 +72,17 @@ void ABlasterHUD::AddAnnouncement()
 	{
 		Announcement = CreateWidget<UAnnouncement>(PlayerController, AnnouncementClass);
 		Announcement->AddToViewport();
+	}
+}
+
+void ABlasterHUD::AddEliminationAnnouncement(const FString AttackerName, const FString VictimName)
+{
+	OwningPlayer = OwningPlayer == nullptr ? GetOwningPlayerController() : OwningPlayer;
+	if (OwningPlayer && EliminationAnnouncementClass)
+	{
+		auto EliminationAnnouncementWidget = CreateWidget<UElimAnnouncement>(OwningPlayer, EliminationAnnouncementClass);
+		EliminationAnnouncementWidget->SetEliminationAnnouncement(AttackerName, VictimName);
+		EliminationAnnouncementWidget->AddToViewport();
 	}
 }
 

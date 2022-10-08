@@ -52,6 +52,8 @@ public:
 	float SingleTripTime = 0.f;
 
 	FHighPingDelegate HighPingDelegate;
+
+	void BroadcastEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -97,6 +99,9 @@ protected:
 
 	void HighPingWarning(const bool bShow);
 	bool HighPingWarningAnimationIsPlaying();
+
+	UFUNCTION(Client, Reliable)
+	void ClientEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
 public:
 private:
 	UPROPERTY()

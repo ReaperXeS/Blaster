@@ -173,6 +173,44 @@ void ABlasterPlayerController::SetHUDScore(const float Score)
 	}
 }
 
+void ABlasterPlayerController::BroadcastEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim)
+{
+	ClientEliminationMessage(Attacker, Victim);
+}
+
+void ABlasterPlayerController::ClientEliminationMessage_Implementation(const APlayerState* Attacker, const APlayerState* Victim)
+{
+	if (const APlayerState* LocalPlayerState = GetPlayerState<APlayerState>(); Attacker && Victim && LocalPlayerState && GetBlasterHUD())
+	{
+		if (Attacker == LocalPlayerState && Attacker != Victim)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement("You", Victim->GetPlayerName());
+			return;
+		}
+
+		if (Victim == LocalPlayerState && Attacker != LocalPlayerState)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement(Attacker->GetPlayerName(), "You");
+			return;
+		}
+
+		if (Attacker == Victim && Attacker == LocalPlayerState)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement("You", "Yourself");
+			return;
+		}
+
+		if (Attacker == Victim && Attacker != LocalPlayerState)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement(Attacker->GetPlayerName(), "themselves");
+			return;
+		}
+
+		GetBlasterHUD()->AddEliminationAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+	}
+}
+
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -364,6 +402,7 @@ bool ABlasterPlayerController::HighPingWarningAnimationIsPlaying()
 	}
 	return false;
 }
+
 
 void ABlasterPlayerController::ClientJoinMiddleOfGame_Implementation(const FName StateOfMatch, const float Warmup, const float Match, const float StartingTime, const float Cooldown)
 {
