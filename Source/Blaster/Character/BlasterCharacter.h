@@ -10,6 +10,8 @@
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -36,10 +38,10 @@ public:
 	virtual void OnRep_ReplicatedMovement() override;
 	void DropOrDestroyWeapon(class AWeapon* Weapon);
 
-	void EliminationServer();
+	void EliminationServer(const bool bPlayerLeftGame);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastElimination();
+	void MulticastElimination(const bool bPlayerLeftGame);
 
 	virtual void Destroyed() override;
 
@@ -51,6 +53,11 @@ public:
 
 	void Heal(float HealAmount);
 	void ReplenishShield(const float ShieldAmount);
+
+	UFUNCTION(Server, Reliable)
+	void ServerLeaveGame();
+
+	FOnLeftGame OnLeftGame;
 
 	/********************************************/
 	/* Hit boxes used for Server Side Rewind	*/
@@ -275,6 +282,9 @@ private:
 	float EliminationDelay = 3.f;
 
 	void EliminationTimerFinished();
+
+	bool bLeftGame = false;
+
 
 	/**
 	 * Dissolved Effect

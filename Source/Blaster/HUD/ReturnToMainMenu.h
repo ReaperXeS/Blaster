@@ -22,6 +22,9 @@ protected:
 	virtual bool Initialize() override;
 	UFUNCTION()
 	void OnDestroySession(bool bWasSuccessful);
+
+	UFUNCTION()
+	void OnPlayerLeftGame();
 private:
 	UPROPERTY(meta = (BindWidget))
 	class UButton* ReturnToMainMenuButton;
