@@ -52,8 +52,14 @@ public:
 	float SingleTripTime = 0.f;
 
 	FHighPingDelegate HighPingDelegate;
+
+	void BroadcastEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
 protected:
 	virtual void BeginPlay() override;
+	virtual void SetupInputComponent() override;
+
+	void ShowReturnToMainMenu();
+
 	class ABlasterHUD* GetBlasterHUD();
 	UPROPERTY()
 	class ABlasterGameMode* BlasterGameMode;
@@ -93,10 +99,24 @@ protected:
 
 	void HighPingWarning(const bool bShow);
 	bool HighPingWarningAnimationIsPlaying();
+
+	UFUNCTION(Client, Reliable)
+	void ClientEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
 public:
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
+
+	/********************************/
+	/* Return to Main Menu Handling */
+	/********************************/
+	UPROPERTY(EditAnywhere, Category = "HUD")
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidgetClass;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenuWidget;
+
+	bool bReturnToMainMenuWidgetIsShowing = false;
 
 	/*********************************
 	 * Variables set from Game Mode

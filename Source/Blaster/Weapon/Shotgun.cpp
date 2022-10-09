@@ -40,12 +40,13 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				{
 					if (OwnerPawn->HasAuthority() && (!bUseServerSideRewind || OwnerPawn->IsLocallyControlled()))
 					{
-						UGameplayStatics::ApplyPointDamage(HitCharacter, Damage, HitResult.ImpactPoint, HitResult, OwnerController, this, UDamageType::StaticClass());
+						const float DamageToCause = HitResult.BoneName.ToString() == HitCharacter->HeadBoneName ? HeadshotDamage : Damage;
+						UGameplayStatics::ApplyPointDamage(HitCharacter, DamageToCause, HitResult.ImpactPoint, HitResult, OwnerController, this, UDamageType::StaticClass());
 					}
 
 					if (!HasAuthority() && bUseServerSideRewind && GetBlasterOwnerCharacter() && GetBlasterOwnerCharacter()->GetLagCompensationComponent() && OwnerPawn->IsLocallyControlled())
 					{
-						GetBlasterOwnerCharacter()->GetLagCompensationComponent()->ServerScoreRequest(HitCharacter, Start, HitTarget, GetBlasterOwnerController()->GetServerTime() - GetBlasterOwnerController()->SingleTripTime, this);
+						GetBlasterOwnerCharacter()->GetLagCompensationComponent()->ServerScoreRequest(HitCharacter, Start, HitTarget, GetBlasterOwnerController()->GetServerTime() - GetBlasterOwnerController()->SingleTripTime);
 					}
 				}
 

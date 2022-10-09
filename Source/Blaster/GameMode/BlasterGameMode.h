@@ -22,6 +22,7 @@ public:
 	ABlasterGameMode();
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* EliminatedController, ABlasterPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
+	virtual void PlayerLeftGame(class ABlasterPlayerState* PlayerLeaving);
 	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(EditDefaultsOnly)

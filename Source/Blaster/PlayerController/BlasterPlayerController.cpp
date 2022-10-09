@@ -16,6 +16,7 @@
 #include "Blaster/PlayerState/BlasterPlayerState.h"
 #include "Components/Image.h"
 #include "Kismet/GameplayStatics.h"
+#include "Blaster/HUD/ReturnToMainMenu.h"
 
 void ABlasterPlayerController::UpdateDeathMessage(const FString KilledBy)
 {
@@ -172,6 +173,44 @@ void ABlasterPlayerController::SetHUDScore(const float Score)
 	}
 }
 
+void ABlasterPlayerController::BroadcastEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim)
+{
+	ClientEliminationMessage(Attacker, Victim);
+}
+
+void ABlasterPlayerController::ClientEliminationMessage_Implementation(const APlayerState* Attacker, const APlayerState* Victim)
+{
+	if (const APlayerState* LocalPlayerState = GetPlayerState<APlayerState>(); Attacker && Victim && LocalPlayerState && GetBlasterHUD())
+	{
+		if (Attacker == LocalPlayerState && Attacker != Victim)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement("You", Victim->GetPlayerName());
+			return;
+		}
+
+		if (Victim == LocalPlayerState && Attacker != LocalPlayerState)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement(Attacker->GetPlayerName(), "You");
+			return;
+		}
+
+		if (Attacker == Victim && Attacker == LocalPlayerState)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement("You", "Yourself");
+			return;
+		}
+
+		if (Attacker == Victim && Attacker != LocalPlayerState)
+		{
+			GetBlasterHUD()->AddEliminationAnnouncement(Attacker->GetPlayerName(), "themselves");
+			return;
+		}
+
+		GetBlasterHUD()->AddEliminationAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+	}
+}
+
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -266,6 +305,37 @@ void ABlasterPlayerController::ServerRequestServerTime_Implementation(const floa
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt);
 }
 
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if (InputComponent)
+	{
+		InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMainMenu);
+	}
+}
+
+void ABlasterPlayerController::ShowReturnToMainMenu()
+{
+	if (ReturnToMainMenuWidgetClass)
+	{
+		ReturnToMainMenuWidget = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidgetClass);
+		if (ReturnToMainMenuWidget)
+		{
+			bReturnToMainMenuWidgetIsShowing = !bReturnToMainMenuWidgetIsShowing;
+
+			if (bReturnToMainMenuWidgetIsShowing)
+			{
+				ReturnToMainMenuWidget->MenuSetup();
+			}
+			else
+			{
+				ReturnToMainMenuWidget->MenuTeardown();
+			}
+		}
+	}
+}
+
 void ABlasterPlayerController::HideDeathMessage()
 {
 	if (GetBlasterHUD() &&
@@ -333,6 +403,7 @@ bool ABlasterPlayerController::HighPingWarningAnimationIsPlaying()
 	return false;
 }
 
+
 void ABlasterPlayerController::ClientJoinMiddleOfGame_Implementation(const FName StateOfMatch, const float Warmup, const float Match, const float StartingTime, const float Cooldown)
 {
 	CooldownTime = Cooldown;
@@ -371,7 +442,7 @@ void ABlasterPlayerController::CheckPing(const float DeltaSeconds)
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if (PlayerState)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Ping: %d"), PlayerState->GetCompressedPing() * 4);
+			// UE_LOG(LogTemp, Warning, TEXT("Ping: %d"), PlayerState->GetCompressedPing() * 4);
 			if (PlayerState->GetCompressedPing() * 4 > HighPingThreshold)
 			{
 				HighPingWarning(true);

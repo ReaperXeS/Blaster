@@ -24,8 +24,12 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			BeamEnd = OutHitResult.ImpactPoint;
 		}
+		else
+		{
+			OutHitResult.ImpactPoint = End;
+		}
 		// draw debug sphere
-		DrawDebugSphere(World, BeamEnd, 16.f, 12, FColor::Orange, true);
+		// DrawDebugSphere(World, BeamEnd, 16.f, 12, FColor::Orange, true);
 
 		if (BeamParticles) // Beam particles are optional
 		{
@@ -60,12 +64,13 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		{
 			if (bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled(); HasAuthority() && bCauseAuthDamage)
 			{
-				UGameplayStatics::ApplyPointDamage(HitCharacter, Damage, FireHit.ImpactPoint, FireHit, GetBlasterOwnerController(), this, UDamageType::StaticClass());
+				const float DamageToCause = FireHit.BoneName.ToString() == HitCharacter->HeadBoneName ? HeadshotDamage : Damage;
+				UGameplayStatics::ApplyPointDamage(HitCharacter, DamageToCause, FireHit.ImpactPoint, FireHit, GetBlasterOwnerController(), this, UDamageType::StaticClass());
 			}
 
 			if (!HasAuthority() && bUseServerSideRewind && GetBlasterOwnerCharacter() && GetBlasterOwnerCharacter()->GetLagCompensationComponent())
 			{
-				GetBlasterOwnerCharacter()->GetLagCompensationComponent()->ServerScoreRequest(HitCharacter, Start, HitTarget, GetBlasterOwnerController()->GetServerTime() - GetBlasterOwnerController()->SingleTripTime, this);
+				GetBlasterOwnerCharacter()->GetLagCompensationComponent()->ServerScoreRequest(HitCharacter, Start, HitTarget, GetBlasterOwnerController()->GetServerTime() - GetBlasterOwnerController()->SingleTripTime);
 			}
 
 			if (ImpactParticles)

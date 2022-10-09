@@ -5,6 +5,10 @@
 #include "CharacterOverlay.h"
 #include "Announcement.h"
 #include "Blueprint/UserWidget.h"
+#include "ElimAnnouncement.h"
+#include "Components/HorizontalBox.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Components/CanvasPanelSlot.h"
 
 void ABlasterHUD::BeginPlay()
 {
@@ -74,6 +78,37 @@ void ABlasterHUD::AddAnnouncement()
 	}
 }
 
+void ABlasterHUD::AddEliminationAnnouncement(const FString AttackerName, const FString VictimName)
+{
+	OwningPlayer = OwningPlayer == nullptr ? GetOwningPlayerController() : OwningPlayer;
+	if (OwningPlayer && EliminationAnnouncementClass)
+	{
+		const auto EliminationAnnouncementWidget = CreateWidget<UElimAnnouncement>(OwningPlayer, EliminationAnnouncementClass);
+		EliminationAnnouncementWidget->SetEliminationAnnouncement(AttackerName, VictimName);
+		EliminationAnnouncementWidget->AddToViewport();
+
+		// Move up old announcements up
+		for (const UElimAnnouncement* EliminationAnnouncement : EliminationAnnouncements)
+		{
+			if (EliminationAnnouncement && EliminationAnnouncement->AnnouncementBox)
+			{
+				if (UCanvasPanelSlot* CanvasSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(EliminationAnnouncement->AnnouncementBox))
+				{
+					const FVector2d Position = CanvasSlot->GetPosition();
+					CanvasSlot->SetPosition(FVector2d(Position.X, Position.Y - CanvasSlot->GetSize().Y));
+				}
+			}
+		}
+		EliminationAnnouncements.Add(EliminationAnnouncementWidget);
+
+		FTimerHandle EliminationTimer;
+		FTimerDelegate TimerDelegate;
+
+		TimerDelegate.BindUFunction(this, FName("EliminationAnnouncementTimerFinished"), EliminationAnnouncementWidget);
+		GetWorldTimerManager().SetTimer(EliminationTimer, TimerDelegate, EliminationAnnouncementTime, false);
+	}
+}
+
 void ABlasterHUD::AddCharacterOverlay() const
 {
 	if (CharacterOverlay)
@@ -92,4 +127,12 @@ void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, F
 	);
 
 	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight, 0.f, 0.f, 1.f, 1.f, CrosshairColor);
+}
+
+void ABlasterHUD::EliminationAnnouncementTimerFinished(UElimAnnouncement* MessageToRemove)
+{
+	if (MessageToRemove)
+	{
+		MessageToRemove->RemoveFromParent();
+	}
 }
