@@ -3,6 +3,7 @@
 
 #include "ProjectileBullet.h"
 
+#include "Weapon.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/PlayerController/BlasterPlayerController.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
@@ -38,15 +39,16 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	{
 		if (const auto OwnerController = Cast<ABlasterPlayerController>(OwnerCharacter->Controller))
 		{
+			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
 			const auto HitDirection = (Hit.Location - GetActorLocation()).GetSafeNormal();
-			if (OwnerCharacter->HasAuthority() && (!bUseServerSideRewind || OwnerCharacter->IsLocallyControlled()))
+			if (OwnerCharacter->HasAuthority() && (!bUseServerSideRewind || OwnerCharacter->IsLocallyControlled()) && HitCharacter)
 			{
-				UGameplayStatics::ApplyPointDamage(OtherActor, Damage, HitDirection, Hit, OwnerController, this, UDamageType::StaticClass());
+				const float DamageToCause = Hit.BoneName.ToString() == HitCharacter->HeadBoneName ? HeadshotDamage : Damage;
+				UGameplayStatics::ApplyPointDamage(HitCharacter, DamageToCause, HitDirection, Hit, OwnerController, this, UDamageType::StaticClass());
 				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 				return;
 			}
 
-			ABlasterCharacter* HitCharacter = Cast<ABlasterCharacter>(OtherActor);
 			if (bUseServerSideRewind && HitCharacter && OwnerCharacter->GetLagCompensationComponent() && OwnerCharacter->IsLocallyControlled())
 			{
 				OwnerCharacter->GetLagCompensationComponent()->ProjectileServerScoreRequest(HitCharacter, TraceStart, InitialVelocity, OwnerController->GetServerTime() - OwnerController->SingleTripTime);

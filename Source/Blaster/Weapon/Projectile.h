@@ -24,10 +24,17 @@ public:
 	FVector_NetQuantize TraceStart;
 	FVector_NetQuantize100 InitialVelocity;
 
+
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed = 15000.0f;
 
+	// Used only for Grenades and Rockets (bullets is set from weapon)
+	UPROPERTY(EditAnywhere)
 	float Damage = 20.f;
+
+	// Used only for Grenades and Rockets (bullets is set from weapon)
+	UPROPERTY(EditAnywhere)
+	float HeadshotDamage = 40.f;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

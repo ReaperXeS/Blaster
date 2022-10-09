@@ -119,6 +119,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon")
 	float Damage = 20.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon")
+	float HeadshotDamage = 40.0f;
+
 	UPROPERTY(Replicated, EditAnywhere, Category = "Weapon")
 	bool bUseServerSideRewind = false;
 
@@ -198,4 +201,5 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadshotDamage() const { return HeadshotDamage; }
 };

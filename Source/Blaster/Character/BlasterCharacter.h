@@ -124,6 +124,9 @@ public:
 
 	UPROPERTY()
 	TMap<FName, UBoxComponent*> HitCollisionBoxes;
+
+	UPROPERTY(EditAnywhere)
+	FString HeadBoneName = "head";
 protected:
 	UBoxComponent* CreateHitBox(FName SocketName);
 	UBoxComponent* CreateHitBox(FName SocketName, FName HitBoxName);

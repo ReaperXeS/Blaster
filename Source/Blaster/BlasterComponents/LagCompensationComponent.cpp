@@ -126,46 +126,42 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 
-		if (UWorld* World = GetWorld())
+		FPredictProjectilePathParams PredictParams;
+		PredictParams.bTraceWithChannel = true;
+		PredictParams.bTraceWithCollision = true;
+		PredictParams.LaunchVelocity = InitialVelocity;
+		PredictParams.MaxSimTime = MaxRecordTime;
+		PredictParams.ProjectileRadius = 5.f;
+		PredictParams.SimFrequency = 15.f;
+		PredictParams.StartLocation = TraceStart;
+		PredictParams.TraceChannel = ECC_HitBox;
+		PredictParams.ActorsToIgnore.Add(GetOwner());
+
+		FPredictProjectilePathResult PredictResult;
+
+		UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
+		if (PredictResult.HitResult.bBlockingHit)
 		{
-			FHitResult ConfirmHitResult;
-			FPredictProjectilePathParams PredictParams;
-			PredictParams.bTraceWithChannel = true;
-			PredictParams.bTraceWithCollision = true;
-			PredictParams.LaunchVelocity = InitialVelocity;
-			PredictParams.MaxSimTime = MaxRecordTime;
-			PredictParams.ProjectileRadius = 5.f;
-			PredictParams.SimFrequency = 15.f;
-			PredictParams.StartLocation = TraceStart;
-			PredictParams.TraceChannel = ECC_HitBox;
-			PredictParams.ActorsToIgnore.Add(GetOwner());
-
-			FPredictProjectilePathResult PredictResult;
-
-			UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
-			if (PredictResult.HitResult.bBlockingHit)
+			MoveBoxes(HitCharacter, CurrentFrame, true);
+			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+			return FServerSideRewindResult{true, true, PredictResult.HitResult};
+		}
+		// Didn't hit head, check the rest
+		for (auto& BoxPair : HitCharacter->HitCollisionBoxes)
+		{
+			if (BoxPair.Value)
 			{
-				MoveBoxes(HitCharacter, CurrentFrame, true);
-				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
-				return FServerSideRewindResult{true, true, PredictResult.HitResult};
+				BoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				BoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
 			}
-			// Didn't hit head, check the rest
-			for (auto& BoxPair : HitCharacter->HitCollisionBoxes)
-			{
-				if (BoxPair.Value)
-				{
-					BoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-					BoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECR_Block);
-				}
-			}
+		}
 
-			UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
-			if (PredictResult.HitResult.bBlockingHit)
-			{
-				MoveBoxes(HitCharacter, CurrentFrame, true);
-				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
-				return FServerSideRewindResult{true, false, PredictResult.HitResult};
-			}
+		UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
+		if (PredictResult.HitResult.bBlockingHit)
+		{
+			MoveBoxes(HitCharacter, CurrentFrame, true);
+			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+			return FServerSideRewindResult{true, false, PredictResult.HitResult};
 		}
 	}
 
@@ -420,12 +416,12 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewin
 	return ConfirmShotgunHit(FramesToCheck, TraceStart, HitLocations);
 }
 
-void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime, class AWeapon* DamageCauser)
+void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float& HitTime)
 {
-	const FServerSideRewindResult Result = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime);
-	if (Character && HitCharacter && Result.bHitConfirmed)
+	if (const FServerSideRewindResult Result = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime); Character && Character->GetEquippedWeapon() && Result.bHitConfirmed)
 	{
-		UGameplayStatics::ApplyPointDamage(HitCharacter, DamageCauser->GetDamage(), HitLocation, Result.HitResult, Character->Controller, DamageCauser, UDamageType::StaticClass());
+		const float DamageToCause = Result.bHeadShot ? Character->GetEquippedWeapon()->GetHeadshotDamage() : Character->GetEquippedWeapon()->GetDamage();
+		UGameplayStatics::ApplyPointDamage(HitCharacter, DamageToCause, HitLocation, Result.HitResult, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
 	}
 }
 
@@ -433,7 +429,8 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABla
 {
 	if (const FServerSideRewindResult Result = ProjectileServerSideRewind(HitCharacter, TraceStart, InitialVelocity, HitTime); HitCharacter && Character && Character->GetEquippedWeapon() && Result.bHitConfirmed)
 	{
-		UGameplayStatics::ApplyPointDamage(HitCharacter, Character->GetEquippedWeapon()->GetDamage(), Result.HitResult.ImpactPoint, Result.HitResult, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
+		const float DamageToCause = Result.bHeadShot ? Character->GetEquippedWeapon()->GetHeadshotDamage() : Character->GetEquippedWeapon()->GetDamage();
+		UGameplayStatics::ApplyPointDamage(HitCharacter, DamageToCause, Result.HitResult.ImpactPoint, Result.HitResult, Character->Controller, Character->GetEquippedWeapon(), UDamageType::StaticClass());
 	}
 }
 
@@ -444,11 +441,11 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 	{
 		if (HitCharacter && HitCharacter->GetEquippedWeapon())
 		{
-			const float HeadShotDamage = Confirm.HeadShots.Contains(HitCharacter) ? Confirm.HeadShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetDamage() : 0.f;
+			const float HeadShotDamage = Confirm.HeadShots.Contains(HitCharacter) ? Confirm.HeadShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetHeadshotDamage() : 0.f;
 			const float BodyDamage = Confirm.BodyShots.Contains(HitCharacter) ? Confirm.BodyShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetDamage() : 0.f;
+			const float DamageToCause = HeadShotDamage + BodyDamage;
 
-			// Hit Location not set here, what happened if character has been shot in head & body?
-			UGameplayStatics::ApplyPointDamage(HitCharacter, HeadShotDamage + BodyDamage, HitCharacter->GetActorLocation(), FHitResult(), Character->Controller, HitCharacter->GetEquippedWeapon(), UDamageType::StaticClass());
+			UGameplayStatics::ApplyPointDamage(HitCharacter, DamageToCause, HitCharacter->GetActorLocation(), FHitResult(), Character->Controller, HitCharacter->GetEquippedWeapon(), UDamageType::StaticClass());
 		}
 	}
 }
