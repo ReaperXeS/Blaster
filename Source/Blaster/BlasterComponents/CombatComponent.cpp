@@ -580,8 +580,6 @@ bool UCombatComponent::CanFire()
 	}
 	if (!EquippedWeapon->IsEmpty() && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun)
 	{
-		bLocallyReloading = false;
-
 		return true; // Shotgun can interrupt reload to fire.
 	}
 	if (bLocallyReloading)
@@ -916,6 +914,7 @@ void UCombatComponent::LocalShotgunFire(class AShotgun* Shotgun, const TArray<FV
 
 	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
 	{
+		bLocallyReloading = false;
 		CombatState = ECombatState::ECS_Unoccupied;
 		Character->PlayFireMontage(bAiming);
 		Shotgun->FireShotgun(TraceHitTargetArray);
