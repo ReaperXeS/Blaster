@@ -269,7 +269,7 @@ void ABlasterCharacter::MulticastGainedTheLead_Implementation()
 {
 	if (CrownSystem && CrownComponent == nullptr)
 	{
-		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(), GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetMesh(), FName(), GetActorLocation() + FVector(0.f, 0.f, 110.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
 	}
 
 	if (CrownComponent)
@@ -887,6 +887,11 @@ void ABlasterCharacter::HideCameraIfCharacterClose() const
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
 		}
+
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
 	}
 	else
 	{
@@ -894,6 +899,11 @@ void ABlasterCharacter::HideCameraIfCharacterClose() const
 		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
 		{
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+
+		if (Combat && Combat->SecondaryWeapon && Combat->SecondaryWeapon->GetWeaponMesh())
+		{
+			Combat->SecondaryWeapon->GetWeaponMesh()->bOwnerNoSee = false;
 		}
 	}
 }
