@@ -23,12 +23,13 @@ public:
 	/****************************************/
 	/*				Teams					*/
 	/****************************************/
-	void BlueTeamScores();
-	void RedTeamScores();
-
+public:
 	TArray<ABlasterPlayerState*> BlueTeam;
 	TArray<ABlasterPlayerState*> RedTeam;
 
+	void BlueTeamScores();
+	void RedTeamScores();
+protected:
 	UPROPERTY(ReplicatedUsing=OnRep_RedTeamScore)
 	float RedTeamScore = 0.f;
 
@@ -40,6 +41,7 @@ public:
 
 	UFUNCTION()
 	void OnRep_BlueTeamScore();
+
 private:
 	float TopScore = 0.f;
 };
