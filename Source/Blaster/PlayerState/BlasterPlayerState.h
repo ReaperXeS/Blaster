@@ -47,7 +47,10 @@ private:
 
 	UPROPERTY(Replicated)
 	ETeam Team = ETeam::ET_NoTeam;
+
+	UFUNCTION()
+	void OnRep_Team();
 public:
 	FORCEINLINE ETeam GetTeam() const { return Team; }
-	FORCEINLINE void SetTeam(const ETeam NewTeam) { Team = NewTeam; }
+	void SetTeam(const ETeam NewTeam);
 };

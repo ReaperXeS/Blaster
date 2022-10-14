@@ -67,6 +67,23 @@ void ABlasterPlayerState::UpdateScore()
 	}
 }
 
+void ABlasterPlayerState::OnRep_Team()
+{
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn()))
+	{
+		BlasterCharacter->SetTeamColor(Team);
+	}
+}
+
+void ABlasterPlayerState::SetTeam(const ETeam NewTeam)
+{
+	Team = NewTeam;
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn()))
+	{
+		BlasterCharacter->SetTeamColor(Team);
+	}
+}
+
 void ABlasterPlayerState::OnRep_Score()
 {
 	Super::OnRep_Score();

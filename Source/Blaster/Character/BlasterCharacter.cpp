@@ -238,6 +238,7 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToDefeats(0); // Init Defeats
 			BlasterPlayerState->AddToScore(0.f); // Init Score
+			SetTeamColor(BlasterPlayerState->GetTeam());
 
 			if (const ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)); BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
@@ -262,6 +263,30 @@ void ABlasterCharacter::ReplenishShield(const float ShieldAmount)
 	{
 		Shield = FMath::Clamp(Shield + ShieldAmount, 0.f, MaxShield);
 		UpdateHUD();
+	}
+}
+
+void ABlasterCharacter::SetTeamColor(const ETeam Team)
+{
+	if (GetMesh() == nullptr)
+	{
+		return;
+	}
+
+	switch (Team)
+	{
+	case ETeam::ET_Red:
+		GetMesh()->SetMaterial(0, RedMatInstance);
+		DissolveMaterialInstance = RedDissolveMatInstance;
+		break;
+	case ETeam::ET_Blue:
+		GetMesh()->SetMaterial(0, BlueMatInstance);
+		DissolveMaterialInstance = BlueDissolveMatInstance;
+		break;
+	default:
+		GetMesh()->SetMaterial(0, DefaultMatInstance);
+		DissolveMaterialInstance = BlueDissolveMatInstance;
+		break;
 	}
 }
 
