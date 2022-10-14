@@ -222,6 +222,7 @@ void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProper
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ABlasterPlayerController, MatchState);
+	DOREPLIFETIME(ABlasterPlayerController, bShowTeamScores);
 }
 
 ABlasterHUD* ABlasterPlayerController::GetBlasterHUD()
@@ -364,6 +365,46 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	HideDeathMessage();
 }
 
+void ABlasterPlayerController::HideTeamScores()
+{
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->BlueTeamScore, FString());
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->RedTeamScore, FString());
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->ScoreSpacerText, FString());
+	}
+}
+
+void ABlasterPlayerController::InitTeamScores()
+{
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->BlueTeamScore, 0);
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->RedTeamScore, 0);
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->ScoreSpacerText, FString("|"));
+	}
+}
+
+void ABlasterPlayerController::SetHUDBlueTeamScore(const int32 BlueScore)
+{
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->BlueTeamScore, BlueScore);
+	}
+}
+
+void ABlasterPlayerController::SetHUDRedTeamScore(const int32 RedScore)
+{
+	if (GetBlasterHUD() &&
+		GetBlasterHUD()->CharacterOverlay)
+	{
+		UpdateTextBlockText(GetBlasterHUD()->CharacterOverlay->RedTeamScore, RedScore);
+	}
+}
+
 void ABlasterPlayerController::CheckTimeSync(const float DeltaSeconds)
 {
 	TimeSyncRunningTime += DeltaSeconds;
@@ -401,6 +442,18 @@ bool ABlasterPlayerController::HighPingWarningAnimationIsPlaying()
 		return GetBlasterHUD()->CharacterOverlay->IsAnimationPlaying(GetBlasterHUD()->CharacterOverlay->HighPingAnimation);
 	}
 	return false;
+}
+
+void ABlasterPlayerController::OnRep_ShowTeamScores()
+{
+	if (bShowTeamScores)
+	{
+		InitTeamScores();
+	}
+	else
+	{
+		HideTeamScores();
+	}
 }
 
 
@@ -501,13 +554,13 @@ void ABlasterPlayerController::ReceivedPlayer()
 	}
 }
 
-void ABlasterPlayerController::OnMatchStateSet(const FName State)
+void ABlasterPlayerController::OnMatchStateSet(const FName State, const bool bTeamsMatch)
 {
 	MatchState = State;
 
 	if (MatchState == MatchState::InProgress && GetBlasterHUD())
 	{
-		HandleMatchHasStarted();
+		HandleMatchHasStarted(bTeamsMatch);
 	}
 	else if (MatchState == MatchState::Cooldown)
 	{
@@ -527,8 +580,13 @@ void ABlasterPlayerController::OnRep_MatchState()
 	}
 }
 
-void ABlasterPlayerController::HandleMatchHasStarted()
+void ABlasterPlayerController::HandleMatchHasStarted(const bool bTeamsMatch)
 {
+	if (HasAuthority())
+	{
+		bShowTeamScores = bTeamsMatch;
+	}
+
 	if (GetBlasterHUD())
 	{
 		GetBlasterHUD()->AddCharacterOverlay();
@@ -536,6 +594,18 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 		if (GetBlasterHUD()->Announcement)
 		{
 			GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+
+		if (HasAuthority())
+		{
+			if (bTeamsMatch)
+			{
+				InitTeamScores();
+			}
+			else
+			{
+				HideTeamScores();
+			}
 		}
 	}
 }

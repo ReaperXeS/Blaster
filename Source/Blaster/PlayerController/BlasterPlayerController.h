@@ -32,6 +32,10 @@ public:
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDBlueTeamScore(int32 BlueScore);
+	void SetHUDRedTeamScore(int32 RedScore);
 
 	void CheckPing(float DeltaSeconds);
 	UFUNCTION(Server, Reliable)
@@ -43,8 +47,8 @@ public:
 
 	// Synced with server clock as soon as possible
 	virtual void ReceivedPlayer() override;
-	void OnMatchStateSet(FName State);
-	void HandleMatchHasStarted();
+	void OnMatchStateSet(FName State, const bool bTeamsMatch = false);
+	void HandleMatchHasStarted(const bool bTeamsMatch = false);
 	void HandleCooldown();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -102,6 +106,12 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
+
+
+	UPROPERTY(ReplicatedUsing=OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
 public:
 private:
 	UPROPERTY()

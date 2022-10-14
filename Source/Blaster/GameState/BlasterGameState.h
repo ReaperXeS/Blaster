@@ -23,6 +23,9 @@ public:
 	/****************************************/
 	/*				Teams					*/
 	/****************************************/
+	void BlueTeamScores();
+	void RedTeamScores();
+
 	TArray<ABlasterPlayerState*> BlueTeam;
 	TArray<ABlasterPlayerState*> RedTeam;
 
