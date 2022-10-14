@@ -163,10 +163,10 @@ protected:
 	UFUNCTION()
 	void ReceiveDamageRadial(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, FVector Origin, FHitResult HitInfo, class AController* InstigatedBy, AActor* DamageCauser);
 
-	void ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy);
+	void ReceiveDamageGeneric(float Damage, const FVector HitLocation, AController* InstigatedBy);
 
 	void UpdateHUD();
-	void SpawnDefaultWeapon() const;
+	void SpawnDefaultWeapon();
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
@@ -372,6 +372,9 @@ private:
 	/*****************************************/
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);

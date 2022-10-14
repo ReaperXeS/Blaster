@@ -50,6 +50,27 @@ void ATeamsGameMode::Logout(AController* Exiting)
 	}
 }
 
+float ATeamsGameMode::CalculateDamage(AController* Attacker, AController* Victim, float Damage)
+{
+	if (Attacker == nullptr || Victim == nullptr)
+	{
+		return Damage;
+	}
+
+	const ABlasterPlayerState* AttackerPlayerState = Attacker->GetPlayerState<ABlasterPlayerState>();
+	const ABlasterPlayerState* VictimPlayerState = Victim->GetPlayerState<ABlasterPlayerState>();
+	if (AttackerPlayerState && VictimPlayerState)
+	{
+		// Prevent friendly fire
+		if (AttackerPlayerState->GetTeam() == VictimPlayerState->GetTeam())
+		{
+			return 0.0f;
+		}
+	}
+
+	return Damage;
+}
+
 void ATeamsGameMode::HandleMatchHasStarted()
 {
 	Super::HandleMatchHasStarted();

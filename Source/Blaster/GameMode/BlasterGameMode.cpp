@@ -156,6 +156,11 @@ void ABlasterGameMode::BeginPlay()
 	LevelStartingTime = GetWorld()->GetTimeSeconds();
 }
 
+float ABlasterGameMode::CalculateDamage(AController* Attacker, AController* Victim, float Damage)
+{
+	return Damage;
+}
+
 void ABlasterGameMode::OnMatchStateSet()
 {
 	Super::OnMatchStateSet();
