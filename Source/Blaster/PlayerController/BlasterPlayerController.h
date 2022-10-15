@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
@@ -49,6 +50,8 @@ public:
 	virtual void ReceivedPlayer() override;
 	void OnMatchStateSet(FName State, const bool bTeamsMatch = false);
 	void HandleMatchHasStarted(const bool bTeamsMatch = false);
+	FString GetInfoText(const ABlasterGameState* BlasterGameState);
+	FString GetTeamInfoText(const ABlasterGameState* BlasterGameState);
 	void HandleCooldown();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -107,12 +110,11 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
 
-
-	UPROPERTY(ReplicatedUsing=OnRep_ShowTeamScores)
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
 	bool bShowTeamScores = false;
+
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
-public:
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;

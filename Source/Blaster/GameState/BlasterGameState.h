@@ -41,7 +41,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_BlueTeamScore();
-
+public:
+	FORCEINLINE float GetRedTeamScore() const { return RedTeamScore; }
+	FORCEINLINE float GetBlueTeamScore() const { return BlueTeamScore; }
 private:
 	float TopScore = 0.f;
 };
