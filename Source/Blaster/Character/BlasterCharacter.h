@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blaster/BlasterTypes/CombatState.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "GameFramework/Character.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
@@ -64,6 +65,8 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLostTheLead();
+
+	void SetTeamColor(const ETeam Team);
 
 	/********************************************/
 	/* Hit boxes used for Server Side Rewind	*/
@@ -160,10 +163,10 @@ protected:
 	UFUNCTION()
 	void ReceiveDamageRadial(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, FVector Origin, FHitResult HitInfo, class AController* InstigatedBy, AActor* DamageCauser);
 
-	void ReceiveDamageGeneric(const float Damage, const FVector HitLocation, AController* InstigatedBy);
+	void ReceiveDamageGeneric(float Damage, const FVector HitLocation, AController* InstigatedBy);
 
 	void UpdateHUD();
-	void SpawnDefaultWeapon() const;
+	void SpawnDefaultWeapon();
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
@@ -315,8 +318,27 @@ private:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
 
 	// Material instance set on the Blueprint, used with the dynamic material instance
-	UPROPERTY(EditAnywhere, Category = "Elim")
+	UPROPERTY(VisibleAnywhere, Category = "Elim")
 	UMaterialInstance* DissolveMaterialInstance;
+
+	/*****************************************/
+	/*          Team colors					 */
+	/*****************************************/
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* BlueDissolveMatInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* BlueMatInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* RedDissolveMatInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* RedMatInstance;
+
+	UPROPERTY(EditAnywhere, Category = "Elim")
+	UMaterialInstance* DefaultMatInstance;
 
 	/**
 	 * Elimination effects
@@ -350,6 +372,9 @@ private:
 	/*****************************************/
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	UPROPERTY()
+	class ABlasterGameMode* BlasterGameMode;
 public:
 	// Getters and Setters
 	void SetOverlappingWeapon(AWeapon* Weapon);

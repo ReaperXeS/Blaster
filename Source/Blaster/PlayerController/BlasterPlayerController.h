@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/WeaponTypes.h"
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
@@ -32,8 +33,12 @@ public:
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score);
 	virtual void OnPossess(APawn* InPawn) override;
+	void HideTeamScores();
+	void InitTeamScores();
+	void SetHUDBlueTeamScore(int32 BlueScore);
+	void SetHUDRedTeamScore(int32 RedScore);
 
-	void CheckPing(float DeltaSeconds);
+	void CheckPing(const float DeltaSeconds);
 	UFUNCTION(Server, Reliable)
 	void ServerReportPingStatus(bool bHighPing);
 
@@ -43,8 +48,10 @@ public:
 
 	// Synced with server clock as soon as possible
 	virtual void ReceivedPlayer() override;
-	void OnMatchStateSet(FName State);
-	void HandleMatchHasStarted();
+	void OnMatchStateSet(FName State, const bool bTeamsMatch = false);
+	void HandleMatchHasStarted(const bool bTeamsMatch = false);
+	FString GetInfoText(const ABlasterGameState* BlasterGameState);
+	FString GetTeamInfoText(const ABlasterGameState* BlasterGameState);
 	void HandleCooldown();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -102,7 +109,12 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientEliminationMessage(const APlayerState* Attacker, const APlayerState* Victim);
-public:
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;

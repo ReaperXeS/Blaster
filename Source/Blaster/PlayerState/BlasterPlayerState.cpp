@@ -25,6 +25,7 @@ void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 	DOREPLIFETIME(ABlasterPlayerState, Defeats);
 	DOREPLIFETIME(ABlasterPlayerState, KilledBy);
+	DOREPLIFETIME(ABlasterPlayerState, Team);
 }
 
 void ABlasterPlayerState::UpdateDefeats()
@@ -63,6 +64,23 @@ void ABlasterPlayerState::UpdateScore()
 		{
 			Controller->SetHUDScore(GetScore());
 		}
+	}
+}
+
+void ABlasterPlayerState::OnRep_Team()
+{
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn()))
+	{
+		BlasterCharacter->SetTeamColor(Team);
+	}
+}
+
+void ABlasterPlayerState::SetTeam(const ETeam NewTeam)
+{
+	Team = NewTeam;
+	if (ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(GetPawn()))
+	{
+		BlasterCharacter->SetTeamColor(Team);
 	}
 }
 
