@@ -644,7 +644,7 @@ void ABlasterCharacter::EquipButtonPressed()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		if (Combat->CombatState == ECombatState::ECS_Unoccupied)
 		{
@@ -682,6 +682,11 @@ void ABlasterCharacter::CrouchButtonPressed()
 		return;
 	}
 
+	if (Combat && Combat->bHoldingFlag)
+	{
+		return;
+	}
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -700,7 +705,7 @@ void ABlasterCharacter::ReloadButtonPressed()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		Combat->Reload();
 	}
@@ -714,7 +719,7 @@ void ABlasterCharacter::AimButtonPressed()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		Combat->SetAiming(true);
 	}
@@ -728,7 +733,7 @@ void ABlasterCharacter::AimButtonReleased()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		Combat->SetAiming(false);
 	}
@@ -827,7 +832,7 @@ void ABlasterCharacter::SimProxiesTurn()
 
 void ABlasterCharacter::Jump()
 {
-	if (bDisableGameplay)
+	if (bDisableGameplay || (Combat && Combat->bHoldingFlag))
 	{
 		return;
 	}
@@ -850,7 +855,7 @@ void ABlasterCharacter::FireButtonPressed()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		Combat->FireButtonPressed(true);
 	}
@@ -864,7 +869,7 @@ void ABlasterCharacter::FireButtonReleased()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		Combat->FireButtonPressed(false);
 	}
@@ -877,7 +882,7 @@ void ABlasterCharacter::ThrowGrenadeButtonPressed()
 		return;
 	}
 
-	if (Combat)
+	if (Combat && !Combat->bHoldingFlag)
 	{
 		Combat->ThrowGrenade();
 	}
