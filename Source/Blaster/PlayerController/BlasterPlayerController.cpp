@@ -215,6 +215,8 @@ void ABlasterPlayerController::ClientEliminationMessage_Implementation(const APl
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckMatchState();
 }
 
@@ -542,11 +544,11 @@ void ABlasterPlayerController::ReceivedPlayer()
 	}
 }
 
-void ABlasterPlayerController::OnMatchStateSet(const FName State, const bool bTeamsMatch)
+void ABlasterPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
 {
 	MatchState = State;
 
-	if (MatchState == MatchState::InProgress && GetBlasterHUD())
+	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted(bTeamsMatch);
 	}
@@ -558,7 +560,7 @@ void ABlasterPlayerController::OnMatchStateSet(const FName State, const bool bTe
 
 void ABlasterPlayerController::OnRep_MatchState()
 {
-	if (MatchState == MatchState::InProgress && GetBlasterHUD())
+	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
 	}
@@ -580,34 +582,32 @@ void ABlasterPlayerController::OnRep_ShowTeamScores()
 	}
 }
 
-void ABlasterPlayerController::HandleMatchHasStarted(bool bTeamsMatch)
+void ABlasterPlayerController::HandleMatchHasStarted(const bool bTeamsMatch)
 {
 	if (HasAuthority())
 	{
 		bShowTeamScores = bTeamsMatch;
 	}
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if (BlasterHUD)
+
+	if (GetBlasterHUD())
 	{
-		if (BlasterHUD->CharacterOverlay == nullptr)
+		GetBlasterHUD()->AddCharacterOverlay();
+
+		if (GetBlasterHUD()->Announcement)
 		{
-			BlasterHUD->AddCharacterOverlay();
+			GetBlasterHUD()->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
-		if (BlasterHUD->Announcement)
+
+		if (HasAuthority())
 		{
-			BlasterHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
-		}
-		if (!HasAuthority())
-		{
-			return;
-		}
-		if (bTeamsMatch)
-		{
-			InitTeamScores();
-		}
-		else
-		{
-			HideTeamScores();
+			if (bTeamsMatch)
+			{
+				InitTeamScores();
+			}
+			else
+			{
+				HideTeamScores();
+			}
 		}
 	}
 }

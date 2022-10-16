@@ -38,7 +38,7 @@ public:
 	void SetHUDBlueTeamScore(int32 BlueScore);
 	void SetHUDRedTeamScore(int32 RedScore);
 
-	void CheckPing(float DeltaSeconds);
+	void CheckPing(const float DeltaSeconds);
 	UFUNCTION(Server, Reliable)
 	void ServerReportPingStatus(bool bHighPing);
 
