@@ -200,6 +200,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	int32 MaxGrenades = 4;
+
+	bool bHoldingFlag = false;
 public:
 	void FinishReloading();
 	void FinishSwapWeapons();

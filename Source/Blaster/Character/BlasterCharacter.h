@@ -402,6 +402,7 @@ public:
 	FORCEINLINE UBuffComponent* GetBuffComponent() const { return Buff; }
 	bool IsLocallyReloading() const;
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const { return LagCompensation; }
+	bool IsHoldingTheFlag() const;
 
 	bool bFinishedSwapping = false;
 };
