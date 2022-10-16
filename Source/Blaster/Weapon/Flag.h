@@ -15,6 +15,12 @@ class BLASTER_API AFlag : public AWeapon
 	GENERATED_BODY()
 public:
 	AFlag();
+
+	virtual void Drop() override;
+
+protected:
+	virtual void HandleWeaponStateEquipped() override;
+	virtual void HandleWeaponStateDropped() override;
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* FlagMesh;

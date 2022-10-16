@@ -136,6 +136,10 @@ void ABlasterCharacter::EliminationServer(const bool bPlayerLeftGame)
 		DropOrDestroyWeapon(Combat->EquippedWeapon);
 		DropOrDestroyWeapon(Combat->SecondaryWeapon);
 	}
+	if (Combat->TheFlag)
+	{
+		Combat->TheFlag->Drop();
+	}
 	MulticastElimination(bPlayerLeftGame);
 }
 

@@ -40,7 +40,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget) const;
 	virtual void Fire(const FVector& HitTarget);
-	void Drop();
+	virtual void Drop();
 	void AddAmmo(int32 AmmoToAdd);
 	FVector TraceEndWithScatter(const FVector& HitTarget) const;
 
@@ -168,9 +168,9 @@ private:
 	int32 SequenceAmmoRequest = 0;
 
 	void HandleUpdateWeaponState();
-	void HandleWeaponStateEquipped();
+	virtual void HandleWeaponStateEquipped();
 	void HandleWeaponStateEquippedSecondary();
-	void HandleWeaponStateDropped();
+	virtual void HandleWeaponStateDropped();
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity = 30;
