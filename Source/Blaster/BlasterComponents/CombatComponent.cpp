@@ -34,6 +34,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); // Only relevant to owning client since it will be shown on HUD
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME(UCombatComponent, Grenades);
+	DOREPLIFETIME(UCombatComponent, bHoldingFlag);
 }
 
 void UCombatComponent::PickupAmmo(const EWeaponType WeaponType, int32 AmmoAmount)
@@ -85,6 +86,14 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttached) const
 	if (const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName); Character && Character->GetMesh() && HandSocket && ActorToAttached)
 	{
 		HandSocket->AttachActor(ActorToAttached, Character->GetMesh());
+	}
+}
+
+void UCombatComponent::AttachFlagToLeftHand(AActor* ActorToAttached) const
+{
+	if (const USkeletalMeshSocket* FlagSocket = Character->GetMesh()->GetSocketByName(FName("FlagSocket")); Character && Character->GetMesh() && FlagSocket && ActorToAttached)
+	{
+		FlagSocket->AttachActor(ActorToAttached, Character->GetMesh());
 	}
 }
 
@@ -162,17 +171,28 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		return;
 	}
 
-	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+	if (WeaponToEquip->GetWeaponType() == EWeaponType::EWT_Flag)
 	{
-		EquipSecondaryWeapon(WeaponToEquip);
+		Character->Crouch();
+		AttachFlagToLeftHand(WeaponToEquip);
+		bHoldingFlag = true;
+		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		WeaponToEquip->SetOwner(Character);
 	}
 	else
 	{
-		EquipPrimaryWeapon(WeaponToEquip);
-	}
+		if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+		{
+			EquipSecondaryWeapon(WeaponToEquip);
+		}
+		else
+		{
+			EquipPrimaryWeapon(WeaponToEquip);
+		}
 
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+		Character->bUseControllerRotationYaw = true;
+	}
 }
 
 void UCombatComponent::SwapWeapons()
@@ -349,6 +369,14 @@ int32 UCombatComponent::AmountToReload() const
 		return FMath::Clamp(RoomInMag, 0, Least); // Should not be necessary
 	}
 	return 0;
+}
+
+void UCombatComponent::OnRep_HoldingTheFlag() const
+{
+	if (bHoldingFlag && Character && Character->IsLocallyControlled())
+	{
+		Character->Crouch();
+	}
 }
 
 void UCombatComponent::FinishReloading()

@@ -53,6 +53,7 @@ protected:
 	virtual void BeginPlay() override;
 	void DropEquippedWeapon() const;
 	void AttachActorToLeftHand(AActor* ActorToAttached) const;
+	void AttachFlagToLeftHand(AActor* ActorToAttached) const;
 	void AttachActorToRightHand(AActor* ActorToAttached) const;
 	void AttachActorToBackpack(AActor* ActorToAttached) const;
 	void UpdateCarriedAmmo(const int32 AmountToAdd);
@@ -201,7 +202,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	int32 MaxGrenades = 4;
 
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheFlag)
 	bool bHoldingFlag = false;
+
+	UFUNCTION()
+	void OnRep_HoldingTheFlag() const;
 public:
 	void FinishReloading();
 	void FinishSwapWeapons();

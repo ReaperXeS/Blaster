@@ -11,6 +11,8 @@ AFlag::AFlag()
 	PrimaryActorTick.bCanEverTick = true;
 
 	FlagMesh = CreateDefaultSubobject<UStaticMeshComponent>("FlagMesh");
+	FlagMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	SetRootComponent(FlagMesh);
 
 	GetAreaSphere()->SetupAttachment(FlagMesh);
