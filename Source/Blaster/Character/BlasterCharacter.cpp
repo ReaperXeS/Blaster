@@ -24,6 +24,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/PlayerStart/TeamPlayerStart.h"
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter()
@@ -241,14 +242,43 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if (BlasterPlayerState)
 		{
-			BlasterPlayerState->AddToDefeats(0); // Init Defeats
-			BlasterPlayerState->AddToScore(0.f); // Init Score
-			SetTeamColor(BlasterPlayerState->GetTeam());
-
+			OnPlayerStateInitialized();
 			if (const ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this)); BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
 				MulticastGainedTheLead();
 			}
+		}
+	}
+}
+
+void ABlasterCharacter::OnPlayerStateInitialized()
+{
+	BlasterPlayerState->AddToDefeats(0); // Init Defeats
+	BlasterPlayerState->AddToScore(0.f); // Init Score
+	SetTeamColor(BlasterPlayerState->GetTeam());
+	SetSpawnPoint();
+}
+
+void ABlasterCharacter::SetSpawnPoint()
+{
+	if (HasAuthority() && BlasterPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+
+		for (const auto PlayerStart : PlayerStarts)
+		{
+			if (ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(PlayerStart); TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamPlayerStart);
+			}
+		}
+
+		if (TeamPlayerStarts.Num() > 0)
+		{
+			const ATeamPlayerStart* RandomPlayerStart = TeamPlayerStarts[FMath::RandRange(0, TeamPlayerStarts.Num() - 1)];
+			SetActorLocationAndRotation(RandomPlayerStart->GetActorLocation(), RandomPlayerStart->GetActorRotation());
 		}
 	}
 }

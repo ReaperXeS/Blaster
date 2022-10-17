@@ -167,9 +167,11 @@ protected:
 
 	void UpdateHUD();
 	void SpawnDefaultWeapon();
+	void OnPlayerStateInitialized();
 
 	// Poll for any relevant classes and initialize our HUD
 	void PollInit();
+	void SetSpawnPoint();
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraBoom;
