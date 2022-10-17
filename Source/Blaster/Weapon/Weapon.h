@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "WeaponTypes.h"
+#include "Blaster/BlasterTypes/Team.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -184,6 +185,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType = EWeaponType::EWT_AssaultRifle;
 
+	UPROPERTY(EditAnywhere)
+	ETeam Team;
 protected:
 	ABlasterCharacter* GetBlasterOwnerCharacter() const;
 	ABlasterPlayerController* GetBlasterOwnerController();

@@ -1112,3 +1112,13 @@ bool ABlasterCharacter::IsHoldingTheFlag() const
 
 	return Combat->bHoldingFlag;
 }
+
+ETeam ABlasterCharacter::GetTeam()
+{
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if (BlasterPlayerState)
+	{
+		return BlasterPlayerState->GetTeam();
+	}
+	return ETeam::ET_NoTeam;
+}
