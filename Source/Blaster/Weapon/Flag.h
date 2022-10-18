@@ -17,6 +17,8 @@ public:
 	AFlag();
 
 	virtual void Drop() override;
+	virtual void BeginPlay() override;
+	void ResetFlag();
 
 protected:
 	virtual void HandleWeaponStateEquipped() override;
@@ -24,4 +26,8 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* FlagMesh;
+
+	FTransform InitialTransform;
+public:
+	FORCEINLINE FTransform GetInitialTransform() const { return InitialTransform; }
 };

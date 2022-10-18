@@ -408,4 +408,5 @@ public:
 	bool bFinishedSwapping = false;
 
 	ETeam GetTeam();
+	void SetHoldingTheFlag(bool bHolding) const;
 };

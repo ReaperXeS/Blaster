@@ -406,6 +406,12 @@ void ABlasterCharacter::RotateInPlace(const float DeltaTime)
 		return;
 	}
 
+	if (Combat && Combat->EquippedWeapon)
+	{
+		GetCharacterMovement()->bOrientRotationToMovement = false;
+		bUseControllerRotationYaw = true;
+	}
+
 	if (bDisableGameplay)
 	{
 		bUseControllerRotationYaw = false;
@@ -1151,4 +1157,12 @@ ETeam ABlasterCharacter::GetTeam()
 		return BlasterPlayerState->GetTeam();
 	}
 	return ETeam::ET_NoTeam;
+}
+
+void ABlasterCharacter::SetHoldingTheFlag(const bool bHolding) const
+{
+	if (Combat)
+	{
+		Combat->bHoldingFlag = bHolding;
+	}
 }
