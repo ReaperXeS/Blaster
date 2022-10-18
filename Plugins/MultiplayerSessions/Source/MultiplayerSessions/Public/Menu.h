@@ -24,40 +24,45 @@ protected:
 	* Callbacks for the custom delegates on the MultiplayerSessionsSubsystem. Should be a UFUNCTION since it's a multicast delegate
 	*/
 	UFUNCTION()
-		void OnCreateSession(bool bWasSuccessful);
+	void OnCreateSession(bool bWasSuccessful);
 
 	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSucessful);
 
 	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
 
 	UFUNCTION()
-		void OnDestroySession(bool bWasSuccessful);
+	void OnDestroySession(bool bWasSuccessful);
 
 	UFUNCTION()
-		void OnStartSession(bool bWasSuccessful);
+	void OnStartSession(bool bWasSuccessful);
 public:
 	UFUNCTION(BlueprintCallable)
-		void MenuSetup(int32 aNumbPublicConnections = 4, FString aMatchType = TEXT("FreeForAll"), FString aLobbyPath = TEXT(""));
+	void MenuSetup(int32 aNumbPublicConnections = 4, FString NewMatchType = TEXT("FreeForAll"), FString LobbyPath = TEXT(""));
 
 private:
 	UPROPERTY(meta = (BindWidget))
-		class UButton* btnHost;
+	class UButton* btnHost;
 
 	UPROPERTY(meta = (BindWidget))
-		class UButton* btnJoin;
+	class UButton* btnJoin;
 
 	UFUNCTION()
-		void btnHostClick();
+	void btnHostClick();
 
 	UFUNCTION()
-		void btnJoinClick();
+	void btnJoinClick();
 
 	void MenuTearDown();
 
 	// Subsystem designed to handle online session functionality
+	UPROPERTY()
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
-	int32 NumbPublicConnections{ 4 };
-	FString MatchType{ TEXT("FreeForAll") };
-	FString PathToLobby{ TEXT("") };
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 NumbPublicConnections{4};
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FString MatchType{TEXT("FreeForAll")};
+
+	FString PathToLobby{TEXT("")};
 };
