@@ -11,9 +11,11 @@
 * Declaring our own custom delegates for the Menu class to bind callbacks to
 */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSucessful);
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSucessful);
 DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSucessful);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSucessful);
 
 /**
@@ -46,6 +48,8 @@ public:
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
+	int32 DesiredNumPublicConnections = 0;
+	FString DesiredMatchType{};
 protected:
 	/*
 	 Internal callbacks for the delegates, added to the Online Session Interface delegate list.
@@ -80,7 +84,7 @@ private:
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate;
 	FDelegateHandle StartSessionCompleteDelegateHandle;
 
-	bool bCreateSessionOnDestroy{ false };
+	bool bCreateSessionOnDestroy{false};
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
 };
